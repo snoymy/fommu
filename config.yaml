@@ -1,0 +1,5 @@
+fommu:
+  subdomain: 
+  #domain: fommu.loca.lt
+  domain: 127.0.0.1:3000
+  filehost:
