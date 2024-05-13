@@ -4,6 +4,7 @@ import (
 	"app/internal/appstatus"
 	"app/internal/core/usecase"
 	"app/internal/handler"
+	"context"
 	"net/http"
 	"strings"
 )
@@ -20,11 +21,14 @@ func NewAuthMiddleware(auth *usecase.AuthUsecase) func(next http.Handler) http.H
                 bearer := r.Header.Get("Authorization")
                 accessToken := strings.ReplaceAll(bearer, "Bearer ", "") 
 
-                if err := auth.Exec(r.Context(), sessionId.Value, accessToken); err != nil {
+                session, err := auth.Exec(r.Context(), sessionId.Value, accessToken)
+                if err != nil {
                     return err
                 }
 
-                next.ServeHTTP(w, r)
+                ctx := context.WithValue(r.Context(), "userId", session.Owner)
+
+                next.ServeHTTP(w, r.WithContext(ctx))
                 return nil
             },
         ))    

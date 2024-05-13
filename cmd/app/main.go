@@ -46,9 +46,11 @@ func main() {
     r.Route("/api", func(r chi.Router) {
         usersRoute := api.NewUsersRoute(db)
         sessionsRoute := api.NewSessionsRoute(db)
+        mediaRoute := api.NewMediaRoute(db)
 
         r.Route("/users", usersRoute)
         r.Route("/sessions", sessionsRoute)
+        r.Route("/media", mediaRoute)
     })
 
     http.ListenAndServe(":" + strconv.Itoa(config.Fommu.Port), r)

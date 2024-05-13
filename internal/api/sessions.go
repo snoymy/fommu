@@ -14,8 +14,11 @@ func NewSessionsRoute(db *sqlx.DB) func(chi.Router) {
     userRepo := repoimpl.NewUserRepoImpl(db)
     sessionRepo := repoimpl.NewSessionReoImpl(db)
     signin := usecase.NewSigninUsecase(userRepo, sessionRepo)
-    sessionsController := controller.NewSessionsController(signin)
+    refreshToken := usecase.NewRefreshTokenUsecase(sessionRepo)
+    sessionsController := controller.NewSessionsController(signin, refreshToken)
+
     return func(r chi.Router) {
         r.Post("/signin", handler.Handle(sessionsController.Signin))
+        r.Post("/token/refresh", handler.Handle(sessionsController.RefreshToken))
     }
 }

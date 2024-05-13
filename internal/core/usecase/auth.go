@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"app/internal/appstatus"
+	"app/internal/core/entity"
 	"app/internal/core/repo"
 	"context"
 	"time"
@@ -18,31 +19,31 @@ func NewAuthUsecase(sessionRepo repo.SessionsRepo) *AuthUsecase {
     }
 }
 
-func (uc *AuthUsecase) Exec(ctx context.Context, sessionId string, accessToken string) error {
+func (uc *AuthUsecase) Exec(ctx context.Context, sessionId string, accessToken string) (*entity.SessionEntity, error) {
     if sessionId == "" {
-        return appstatus.InvalidSession("Session not found.")
+        return nil, appstatus.InvalidSession("Session not found.")
     }
     if accessToken == "" {
-        return appstatus.InvalidToken("Token not found.")
+        return nil, appstatus.InvalidToken("Token not found.")
     }
 
     session, err := uc.sessionRepo.FindSessionByID(ctx, sessionId)
     if err != nil {
-        return err
+        return nil, err
     }
 
     if session == nil {
-        return appstatus.InvalidSession("Session not found.")
+        return nil, appstatus.InvalidSession("Session not found.")
     }
 
     if session.AccessToken != accessToken {
-        return appstatus.InvalidToken("Invalid token.")
+        return nil, appstatus.InvalidToken("Invalid token.")
     }
 
     if session.AccessExpireAt.Compare(time.Now().UTC()) <= -1 {
-        return appstatus.InvalidToken("Token expired.")
+        return nil, appstatus.InvalidToken("Token expired.")
     }
 
 
-    return nil
+    return session, nil
 }

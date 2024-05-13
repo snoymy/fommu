@@ -38,6 +38,23 @@ func (r *SessionsRepoImpl) CreateSession(ctx context.Context, session *entity.Se
     return nil
 }
 
+func (r *SessionsRepoImpl) UpdateSession(ctx context.Context, session *entity.SessionEntity) error {
+    _, err := r.db.Exec(
+        `
+        update sessions 
+        set access_token=$1, access_expire_at=$2, refresh_token=$3, refresh_expire_at=$4, last_refresh=$5
+        where id=$6
+        `,
+        session.AccessToken, session.AccessExpireAt, session.RefreshToken, session.RefreshExpireAt, session.LastRefresh, session.ID,
+    )
+
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
 func (r *SessionsRepoImpl) FindSessionByID(ctx context.Context, id string) (*entity.SessionEntity, error) {
     var sessions []*entity.SessionEntity = nil
     err := r.db.Select(&sessions, "select * from sessions where id=$1", id)
