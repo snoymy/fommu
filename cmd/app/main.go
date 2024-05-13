@@ -1,8 +1,8 @@
 package main
 
 import (
-	"app/internal/api"
-	"app/internal/api/apapi"
+	apiroute "app/internal/api/route"
+	aproute "app/internal/activitypub/route"
 	"app/internal/config"
 	"app/internal/config/database"
 	"app/internal/handler"
@@ -35,23 +35,9 @@ func main() {
         MaxAge:           300, // Maximum value not ignored by any of major browsers
     }))
 
-    r.Route("/", func(r chi.Router) {
-        wellKnownRoute := apapi.NewWellKnownRoute(db)
-        usersRoute := apapi.NewUsersRoute(db)
+    apiroute.InitRoute(r, db)
+    aproute.InitRoute(r, db)
 
-        r.Route("/.well-known", wellKnownRoute)
-        r.Route("/users", usersRoute)
-    })
-
-    r.Route("/api", func(r chi.Router) {
-        usersRoute := api.NewUsersRoute(db)
-        sessionsRoute := api.NewSessionsRoute(db)
-        mediaRoute := api.NewMediaRoute(db)
-
-        r.Route("/users", usersRoute)
-        r.Route("/sessions", sessionsRoute)
-        r.Route("/media", mediaRoute)
-    })
 
     http.ListenAndServe(":" + strconv.Itoa(config.Fommu.Port), r)
 }
