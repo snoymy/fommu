@@ -6,7 +6,7 @@ import (
 	"app/internal/appstatus"
 	"context"
 
-	"github.com/go-ap/activitypub"
+	"github.com/snoymy/activitypub"
 )
 
 type FollowUserUsecase struct {

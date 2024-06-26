@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-ap/activitypub"
+	"github.com/snoymy/activitypub"
 )
 
 type ActivitypubAdapterImpl struct {

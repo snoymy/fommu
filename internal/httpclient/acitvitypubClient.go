@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-ap/activitypub"
+	"github.com/snoymy/activitypub"
 )
 
 type ActivitypubClient struct {

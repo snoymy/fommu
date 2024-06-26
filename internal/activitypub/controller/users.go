@@ -14,8 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/go-ap/activitypub"
-	ap "github.com/go-ap/activitypub"
+	"github.com/snoymy/activitypub"
 	"github.com/go-ap/jsonld"
 	"github.com/go-chi/chi/v5"
 )
@@ -67,45 +66,45 @@ func (f *APUsersController) GetUser(w http.ResponseWriter, r *http.Request) erro
     if err != nil {
         return err
     }
-    p := ap.PersonNew(ap.IRI(userURL))
+    p := activitypub.PersonNew(activitypub.IRI(userURL))
 
-    p.Name = ap.NaturalLanguageValuesNew(ap.LangRefValueNew(ap.DefaultLang, user.Displayname))
-    p.PreferredUsername = ap.NaturalLanguageValuesNew(ap.LangRefValueNew(ap.DefaultLang, user.Username))
-    p.Inbox = ap.IRI(inboxURL)
-    p.Outbox = ap.IRI(outbox)
-    p.Followers = ap.IRI(followersURL)
-    p.Following = ap.IRI(followingURL)
-    p.PublicKey = ap.PublicKey{
-        ID: ap.IRI(userURL + "#main-key"),
-        Owner: ap.IRI(userURL),
+    p.Name = activitypub.NaturalLanguageValuesNew(activitypub.LangRefValueNew(activitypub.DefaultLang, user.Displayname))
+    p.PreferredUsername = activitypub.NaturalLanguageValuesNew(activitypub.LangRefValueNew(activitypub.DefaultLang, user.Username))
+    p.Inbox = activitypub.IRI(inboxURL)
+    p.Outbox = activitypub.IRI(outbox)
+    p.Followers = activitypub.IRI(followersURL)
+    p.Following = activitypub.IRI(followingURL)
+    p.PublicKey = activitypub.PublicKey{
+        ID: activitypub.IRI(userURL + "#main-key"),
+        Owner: activitypub.IRI(userURL),
         PublicKeyPem: user.PublicKey,
     }
-    p.Summary = ap.NaturalLanguageValuesNew(ap.LangRefValueNew(
-        ap.DefaultLang, 
+    p.Summary = activitypub.NaturalLanguageValuesNew(activitypub.LangRefValueNew(
+        activitypub.DefaultLang, 
         strings.ReplaceAll(strings.ReplaceAll(utils.Linkify(user.Bio.ValueOrZero()), "\n", "<br>"), " ", "&nbsp;"),
     ))
-    p.URL = ap.IRI(userURL)
-    p.Icon = ap.Image{
-        Type: ap.ImageType,
-        MediaType: ap.MimeType(utils.GetMIMEFromExtension(filepath.Ext(user.Avatar.ValueOrZero()))),
-        URL: ap.IRI(user.Avatar.ValueOrZero()),
+    p.URL = activitypub.IRI(userURL)
+    p.Icon = activitypub.Image{
+        Type: activitypub.ImageType,
+        MediaType: activitypub.MimeType(utils.GetMIMEFromExtension(filepath.Ext(user.Avatar.ValueOrZero()))),
+        URL: activitypub.IRI(user.Avatar.ValueOrZero()),
     }
-    p.Image = ap.Image{
-        Type: ap.ImageType,
-        MediaType: ap.MimeType(utils.GetMIMEFromExtension(filepath.Ext(user.Banner.ValueOrZero()))),
-        URL: ap.IRI(user.Banner.ValueOrZero()),
+    p.Image = activitypub.Image{
+        Type: activitypub.ImageType,
+        MediaType: activitypub.MimeType(utils.GetMIMEFromExtension(filepath.Ext(user.Banner.ValueOrZero()))),
+        URL: activitypub.IRI(user.Banner.ValueOrZero()),
     }
-    p.Attachment = ap.ItemCollection{}
+    p.Attachment = activitypub.ItemCollection{}
     for _, item := range user.Attachment.ValueOrZero() {
-        attachment, err := utils.MapToStruct[ap.Object](item.(map[string]interface{}))
+        attachment, err := utils.MapToStruct[activitypub.Object](item.(map[string]interface{}))
         if err != nil {
             return err
         }
         p.Attachment.Append(attachment)
     }
-    p.Tag = ap.ItemCollection{}
+    p.Tag = activitypub.ItemCollection{}
     for _, item := range user.Tag.ValueOrZero() {
-        tag, err := utils.MapToStruct[ap.Object](item.(map[string]interface{}))
+        tag, err := utils.MapToStruct[activitypub.Object](item.(map[string]interface{}))
         if err != nil {
             return err
         }
@@ -113,7 +112,7 @@ func (f *APUsersController) GetUser(w http.ResponseWriter, r *http.Request) erro
     }
 
     bytes, err := jsonld.WithContext(
-        jsonld.IRI(ap.ActivityBaseURI),
+        jsonld.IRI(activitypub.ActivityBaseURI),
     ).Marshal(p)
 
     if err != nil {

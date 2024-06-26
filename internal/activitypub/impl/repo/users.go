@@ -7,7 +7,7 @@ import (
 	"app/internal/utils"
 	"context"
 
-	"github.com/go-ap/activitypub"
+	"github.com/snoymy/activitypub"
 	"github.com/jmoiron/sqlx"
 	"github.com/microcosm-cc/bluemonday"
 )

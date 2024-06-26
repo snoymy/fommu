@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-ap/activitypub"
+	"github.com/snoymy/activitypub"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/microcosm-cc/bluemonday"

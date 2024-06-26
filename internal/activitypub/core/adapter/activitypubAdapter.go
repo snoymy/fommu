@@ -3,7 +3,7 @@ package adapter
 import (
 	"context"
 
-	"github.com/go-ap/activitypub"
+	"github.com/snoymy/activitypub"
 )
 
 type ActivitypubAdapter interface {
