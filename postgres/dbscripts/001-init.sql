@@ -67,13 +67,13 @@ CREATE TABLE IF NOT EXISTS media (
 
 CREATE TABLE IF NOT EXISTS following (
     id                  UUID PRIMARY KEY,
-    follower            UUID PRIMARY KEY REFERENCES users(id) NOT NULL,
-    following           UUID PRIMARY KEY REFERENCES users(id) NOT NULL,
+    follower            UUID REFERENCES users(id) NOT NULL,
+    following           UUID REFERENCES users(id) NOT NULL,
     status              VARCHAR(255) NOT NULL,
     create_at           TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    update_at           TIMESTAMPTZ
+    update_at           TIMESTAMPTZ,
+    UNIQUE(follower, following)
 );
-
 -- CREATE TABLE IF NOT EXISTS posts (
 --     id                  UUID PRIMARY KEY,
 --     author              UUID REFERENCES users(id) NOT NULL,
