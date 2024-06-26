@@ -2,7 +2,11 @@ package repo
 
 import (
 	"app/internal/api/core/entity"
+	"app/internal/config"
 	"context"
+	"net/url"
+	"os"
+	"path"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -47,4 +51,35 @@ func (r *MediaRepoImpl) FindMediaByID(ctx context.Context, id string) (*entity.M
     }
 
     return media[0], nil
+}
+
+func (a *MediaRepoImpl) WriteFile(ctx context.Context, file []byte, fileName string) (string, error) {
+    filePath := path.Join("./media", fileName)
+
+    outFile, err := os.Create(filePath)
+    if err != nil {
+        return "", err
+    }
+    defer outFile.Close()
+
+    _, err = outFile.Write(file)
+    if err != nil {
+        return "", nil
+    }
+
+    fileUrl, err := url.JoinPath(config.Fommu.FileHost, fileName)
+    if err != nil {
+        return "", err
+    }
+
+    return fileUrl, nil
+}
+
+func (a *MediaRepoImpl) ReadFile(ctx context.Context, fileName string) ([]byte, error) {
+    filePath := path.Join("./media", fileName)
+    fileBytes, err := os.ReadFile(filePath)
+	if err != nil {
+	    return nil, err
+	}
+    return fileBytes, nil
 }

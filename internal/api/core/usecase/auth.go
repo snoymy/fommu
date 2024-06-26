@@ -36,6 +36,10 @@ func (uc *AuthUsecase) Exec(ctx context.Context, sessionId string, accessToken s
         return nil, appstatus.InvalidSession("Session not found.")
     }
 
+    if session.RefreshExpireAt.Compare(time.Now().UTC()) <= -1 {
+        return nil, appstatus.InvalidToken("Session expired.")
+    }
+
     if session.AccessToken != accessToken {
         return nil, appstatus.InvalidToken("Invalid token.")
     }
@@ -43,7 +47,6 @@ func (uc *AuthUsecase) Exec(ctx context.Context, sessionId string, accessToken s
     if session.AccessExpireAt.Compare(time.Now().UTC()) <= -1 {
         return nil, appstatus.InvalidToken("Token expired.")
     }
-
 
     return session, nil
 }

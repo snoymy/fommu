@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"app/internal/appstatus"
-	"app/internal/api/core/adapter"
 	"app/internal/api/core/entity"
 	"app/internal/api/core/repo"
 	"app/internal/utils"
@@ -14,13 +13,11 @@ import (
 
 type UploadFileUsecase struct {
     mediaRepo repo.MediaRepo
-    fileAdapter adapter.FileAdapter
 }
 
-func NewUploadFileUsecase(mediaRepo repo.MediaRepo, fileAdapter adapter.FileAdapter) *UploadFileUsecase {
+func NewUploadFileUsecase(mediaRepo repo.MediaRepo) *UploadFileUsecase {
     return &UploadFileUsecase{
         mediaRepo: mediaRepo,
-        fileAdapter: fileAdapter,
     }
 }
 
@@ -40,7 +37,7 @@ func (uc *UploadFileUsecase) Exec(ctx context.Context, fileBytes []byte, origina
     // generate fileName
     fileName := id + extension
     // write file
-    fileUrl, err := uc.fileAdapter.WriteFile(ctx, fileBytes, fileName)
+    fileUrl, err := uc.mediaRepo.WriteFile(ctx, fileBytes, fileName)
     if err != nil {
         return nil, err
     }
@@ -48,10 +45,12 @@ func (uc *UploadFileUsecase) Exec(ctx context.Context, fileBytes []byte, origina
     media := entity.NewMediaEntity()
     media.ID = id
     media.Url = fileUrl
+    media.PreviewUrl.Set(fileUrl)
     media.Type = utils.GetMediaTypeFromMime(mimeType)
     media.MimeType = mimeType
     media.OriginalFileName = originalFileName
     media.Description.SetNull()
+    media.Metadata.SetNull()
     media.Owner = uploader
     media.Status = "active"
     media.ReferenceCount = 0

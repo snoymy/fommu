@@ -3,6 +3,7 @@ package usecase
 import (
 	"app/internal/activitypub/core/entity"
 	"app/internal/activitypub/core/repo"
+	"app/internal/config"
 	"context"
 )
 
@@ -21,7 +22,7 @@ func (uc *GetUserUsecase) Exec(ctx context.Context, username string) (*entity.Us
         return nil, nil
     }
 
-    user, err := uc.userRepo.FindUserByUsername(ctx, username)
+    user, err := uc.userRepo.FindUserByUsername(ctx, username, config.Fommu.Domain)
     if err != nil {
         return nil, err
     }

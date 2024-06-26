@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"app/internal/appstatus"
-	"app/internal/api/core/adapter"
 	"app/internal/api/core/entity"
 	"app/internal/api/core/repo"
 	"context"
@@ -12,13 +11,11 @@ import (
 
 type GetFileUsecase struct {
     mediaRepo repo.MediaRepo
-    fileAdapter adapter.FileAdapter
 }
 
-func NewGetFileUsecase(mediaRepo repo.MediaRepo, fileAdapter adapter.FileAdapter) *GetFileUsecase {
+func NewGetFileUsecase(mediaRepo repo.MediaRepo) *GetFileUsecase {
     return &GetFileUsecase{
         mediaRepo: mediaRepo,
-        fileAdapter: fileAdapter,
     }
 }
 
@@ -37,7 +34,7 @@ func (uc *GetFileUsecase) Exec(ctx context.Context, fileName string) ([]byte, *e
         return nil, nil, appstatus.NotFound("Media not found.")
     }
     
-    fileBytes, err := uc.fileAdapter.ReadFile(ctx, fileName)
+    fileBytes, err := uc.mediaRepo.ReadFile(ctx, fileName)
     if err != nil {
         return nil, nil, err
     }

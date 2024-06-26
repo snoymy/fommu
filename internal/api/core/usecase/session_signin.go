@@ -1,13 +1,16 @@
 package usecase
 
 import (
-	"app/internal/appstatus"
 	"app/internal/api/core/entity"
 	"app/internal/api/core/repo"
 	"app/internal/api/core/validator"
+	"app/internal/appstatus"
+	"app/internal/config"
 	"app/internal/types"
 	"app/internal/utils"
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,14 +33,19 @@ func (uc *SigninUsecase) Exec(ctx context.Context, email string, password string
     if email == "" {
         return nil, appstatus.BadLogin("Invalid email or password")
     }
-    if err := validator.ValidateEmail(email); err != nil {
-        return nil, appstatus.BadLogin("Invalid email or password")
-    }
 
-    // find user by email
-    user, err := uc.userRepo.FindUserByEmail(ctx, email)
-    if err != nil {
-        return nil, appstatus.InternalServerError(err.Error())
+    var user *entity.UserEntity = nil
+    if err := validator.ValidateEmail(email); err == nil {
+        // find user by email
+        user, err = uc.userRepo.FindUserByEmail(ctx, email, config.Fommu.Domain)
+        if err != nil {
+            return nil, appstatus.InternalServerError(err.Error())
+        }
+    } else {
+        user, err = uc.userRepo.FindUserByUsername(ctx, email, config.Fommu.Domain)
+        if err != nil {
+            return nil, appstatus.InternalServerError(err.Error())
+        }
     }
 
     // return error if user is null
@@ -47,10 +55,10 @@ func (uc *SigninUsecase) Exec(ctx context.Context, email string, password string
 
     // hash password
     // set password_hash
-    passwordHash := utils.HashPassword(password)
+    passwordHash := uc.hashPassword(password)
 
     // return error if password not match
-    if user.PasswordHash != passwordHash {
+    if user.PasswordHash.ValueOrZero() != passwordHash {
         return nil, appstatus.BadLogin("Invalid email or password")
     }
 
@@ -84,4 +92,12 @@ func (uc *SigninUsecase) Exec(ctx context.Context, email string, password string
     }
     // return session 
     return session, nil
+}
+
+func (uc *SigninUsecase) hashPassword(password string) string {
+    h := sha256.New()
+    h.Write([]byte(password))
+    passwordHash := string(base64.StdEncoding.EncodeToString(h.Sum([]byte(password))))
+
+    return passwordHash
 }

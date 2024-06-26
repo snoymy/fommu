@@ -1,11 +1,13 @@
 package usecase
 
 import (
-	"app/internal/appstatus"
 	"app/internal/api/core/dto"
 	"app/internal/api/core/repo"
 	"app/internal/api/core/validator"
+	"app/internal/appstatus"
+	"app/internal/config"
 	"context"
+	"html"
 	"time"
 )
 
@@ -20,13 +22,13 @@ func NewEditProfileUsecase(userRepo repo.UsersRepo) *EditProfileUsecase {
 }
 
 func (uc *EditProfileUsecase) Exec(ctx context.Context, username string, profile dto.UserProfileDTO) error {
-    profileUpdate := false
+    hasUpdate := false
 
     if username == "" {
         return appstatus.BadValue("username is empty.")
     }
 
-    user, err := uc.userRepo.FindUserByUsername(ctx, username)
+    user, err := uc.userRepo.FindUserByUsername(ctx, username, config.Fommu.Domain)
     if err != nil {
         return err
     }
@@ -35,7 +37,7 @@ func (uc *EditProfileUsecase) Exec(ctx context.Context, username string, profile
         return appstatus.NotFound("user not found.")
     }
 
-    if !profile.Displayname.IsNull() {
+    if profile.Displayname != nil {
         displayname := profile.Displayname.ValueOrZero()
         if displayname == "" {
             displayname = user.Username
@@ -44,18 +46,23 @@ func (uc *EditProfileUsecase) Exec(ctx context.Context, username string, profile
                 return err
             }
         }
-        user.Displayname = displayname
-        profileUpdate = true
+        user.Displayname = html.EscapeString(displayname)
+        hasUpdate = true
     }
 
-    if !profile.NamePrefix.IsNull() {
-        user.NamePrefix = profile.NamePrefix
-        profileUpdate = true
+    if profile.NamePrefix != nil {
+        user.NamePrefix.Set(html.EscapeString(profile.NamePrefix.ValueOrZero()))
+        hasUpdate = true
     }
 
-    if !profile.NameSuffix.IsNull() {
-        user.NamePrefix = profile.NamePrefix
-        profileUpdate = true
+    if profile.NameSuffix != nil {
+        user.NameSuffix.Set(html.EscapeString(profile.NameSuffix.ValueOrZero()))
+        hasUpdate = true
+    }
+
+    if profile.Preference != nil {
+        user.Preference = *profile.Preference
+        hasUpdate = true
     }
 
     // if !profile.Gender.IsNull() {
@@ -78,32 +85,32 @@ func (uc *EditProfileUsecase) Exec(ctx context.Context, username string, profile
     //     profileUpdate = true
     // }
 
-    if !profile.Bio.IsNull() {
-        user.Bio = profile.Bio
-        profileUpdate = true
+    if profile.Bio != nil {
+        user.Bio.Set(html.EscapeString(profile.Bio.ValueOrZero()))
+        hasUpdate = true
     }
 
-    if !profile.Discoverable.IsNull() {
+    if profile.Discoverable != nil {
         user.Discoverable = profile.Discoverable.ValueOrZero()
-        profileUpdate = true
+        hasUpdate = true
     }
 
-    if !profile.AutoApproveFollower.IsNull() {
+    if profile.AutoApproveFollower != nil {
         user.AutoApproveFollower = profile.AutoApproveFollower.ValueOrZero()
-        profileUpdate = true
+        hasUpdate = true
     }
 
-    if !profile.Avatar.IsNull() {
-        user.Avatar = profile.Avatar
-        profileUpdate = true
+    if profile.Avatar != nil {
+        user.Avatar = *profile.Avatar
+        hasUpdate = true
     }
 
-    if !profile.Banner.IsNull() {
-        user.Banner = profile.Banner
-        profileUpdate = true
+    if profile.Banner != nil {
+        user.Banner = *profile.Banner
+        hasUpdate = true
     }
 
-    if profileUpdate {
+    if hasUpdate {
         user.UpdateAt.Set(time.Now().UTC())
         if err := uc.userRepo.UpdateUser(ctx, user); err != nil {
             return err

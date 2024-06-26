@@ -51,8 +51,10 @@ var (
     BadPassword = NewAppStatus("bad_password", http.StatusBadRequest)
     BadLogin = NewAppStatus("invalid_login", http.StatusUnauthorized)
     NotFound = NewAppStatus("not_found", http.StatusNotFound)
+    NotAccept = NewAppStatus("not_accept", http.StatusNotAcceptable)
     InvalidToken = NewAppStatus("invalid_token", http.StatusUnauthorized)
     InvalidSession = NewAppStatus("invalid_session", http.StatusUnauthorized)
+    InvalidCredential = NewAppStatus("invalid_credential", http.StatusUnauthorized)
     InternalServerError = NewAppStatus("internal_server_error", http.StatusInternalServerError)
 )
 

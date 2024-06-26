@@ -51,7 +51,7 @@ func ValidateUsername(username string) error {
 }
 
 func ValidateDisplayname(displayname string) error {
-    valid, err := regexp.Match(`^[A-Za-z\d\s\x2e_@!-]{3,16}$`, []byte(displayname))
+    valid, err := regexp.Match(`^.{1,70}$`, []byte(displayname))
     if err != nil {
         return err
     }

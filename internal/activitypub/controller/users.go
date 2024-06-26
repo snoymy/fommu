@@ -1,12 +1,20 @@
 package controller
 
 import (
+	"app/internal/activitypub/core/usecase"
 	"app/internal/appstatus"
 	"app/internal/config"
-	"app/internal/activitypub/core/usecase"
+	"app/internal/utils"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
+	"path/filepath"
+	"strings"
 
+	"github.com/go-ap/activitypub"
 	ap "github.com/go-ap/activitypub"
 	"github.com/go-ap/jsonld"
 	"github.com/go-chi/chi/v5"
@@ -23,6 +31,11 @@ func NewAPUsersController(getUser *usecase.GetUserUsecase) *APUsersController {
 }
 
 func (f *APUsersController) GetUser(w http.ResponseWriter, r *http.Request) error {
+    acceptHeader := r.Header.Get("Accept")
+    if !strings.Contains(acceptHeader, "application/activity+json") && !strings.Contains(acceptHeader, jsonld.ContentType) {
+        return appstatus.NotAccept(fmt.Sprintf("Invalid header: Accept is %s, not activity type.", acceptHeader))
+    }
+
     username := chi.URLParam(r, "username")
 
     user, err := f.getUser.Exec(r.Context(), username)
@@ -56,23 +69,48 @@ func (f *APUsersController) GetUser(w http.ResponseWriter, r *http.Request) erro
     }
     p := ap.PersonNew(ap.IRI(userURL))
 
-    p.Name              = ap.NaturalLanguageValuesNew(ap.LangRefValueNew(ap.DefaultLang, user.Displayname))
+    p.Name = ap.NaturalLanguageValuesNew(ap.LangRefValueNew(ap.DefaultLang, user.Displayname))
     p.PreferredUsername = ap.NaturalLanguageValuesNew(ap.LangRefValueNew(ap.DefaultLang, user.Username))
-    p.Inbox             = ap.IRI(inboxURL)
-    p.Outbox            = ap.IRI(outbox)
-    p.Followers         = ap.IRI(followersURL)
-    p.Following         = ap.IRI(followingURL)
-    p.PublicKey         = ap.PublicKey{
-                              ID: ap.IRI(userURL + "#main-key"),
-                              Owner: ap.IRI(userURL),
-                              PublicKeyPem: user.PublicKey,
-                          }
-    p.Summary           = ap.NaturalLanguageValuesNew(ap.LangRefValueNew(ap.DefaultLang, user.Bio.ValueOrZero()))
-    p.URL               = ap.IRI(userURL)
-    p.Icon              = ap.Image{
-                              Type: ap.ImageType,
-                              URL: ap.IRI(user.Avatar.ValueOrZero()),
-                          }
+    p.Inbox = ap.IRI(inboxURL)
+    p.Outbox = ap.IRI(outbox)
+    p.Followers = ap.IRI(followersURL)
+    p.Following = ap.IRI(followingURL)
+    p.PublicKey = ap.PublicKey{
+        ID: ap.IRI(userURL + "#main-key"),
+        Owner: ap.IRI(userURL),
+        PublicKeyPem: user.PublicKey,
+    }
+    p.Summary = ap.NaturalLanguageValuesNew(ap.LangRefValueNew(
+        ap.DefaultLang, 
+        strings.ReplaceAll(strings.ReplaceAll(utils.Linkify(user.Bio.ValueOrZero()), "\n", "<br>"), " ", "&nbsp;"),
+    ))
+    p.URL = ap.IRI(userURL)
+    p.Icon = ap.Image{
+        Type: ap.ImageType,
+        MediaType: ap.MimeType(utils.GetMIMEFromExtension(filepath.Ext(user.Avatar.ValueOrZero()))),
+        URL: ap.IRI(user.Avatar.ValueOrZero()),
+    }
+    p.Image = ap.Image{
+        Type: ap.ImageType,
+        MediaType: ap.MimeType(utils.GetMIMEFromExtension(filepath.Ext(user.Banner.ValueOrZero()))),
+        URL: ap.IRI(user.Banner.ValueOrZero()),
+    }
+    p.Attachment = ap.ItemCollection{}
+    for _, item := range user.Attachment.ValueOrZero() {
+        attachment, err := utils.MapToStruct[ap.Object](item.(map[string]interface{}))
+        if err != nil {
+            return err
+        }
+        p.Attachment.Append(attachment)
+    }
+    p.Tag = ap.ItemCollection{}
+    for _, item := range user.Tag.ValueOrZero() {
+        tag, err := utils.MapToStruct[ap.Object](item.(map[string]interface{}))
+        if err != nil {
+            return err
+        }
+        p.Tag.Append(tag)
+    }
 
     bytes, err := jsonld.WithContext(
         jsonld.IRI(ap.ActivityBaseURI),
@@ -86,4 +124,53 @@ func (f *APUsersController) GetUser(w http.ResponseWriter, r *http.Request) erro
     _, err = w.Write(bytes)
 
     return err
+}
+
+func (f *APUsersController) Inbox(w http.ResponseWriter, r *http.Request) error {
+    acceptHeader := r.Header.Get("Signature")
+    // j, _ := json.Marshal(r.Header)
+    fmt.Println("Signature", acceptHeader)
+  requestBuffer, err := httputil.DumpRequest(r, true)
+    if err != nil {
+    fmt.Println("Error dumping request:", err)
+    return nil
+  }
+
+  // Print the raw request for debugging
+  fmt.Println("Raw Request:")
+  fmt.Println(string(requestBuffer))
+    // if !strings.Contains(acceptHeader, "application/activity+json") && !strings.Contains(acceptHeader, jsonld.ContentType) {
+    //     return appstatus.NotAccept(fmt.Sprintf("Invalid header: Accept is %s, not activity type.", acceptHeader))
+    // }
+
+    //username := chi.URLParam(r, "username")
+    body, err := io.ReadAll(r.Body)
+    if err != nil {
+        return err
+    }
+    fmt.Printf("\n\nInbox: %s\n", body)
+
+    activity := &activitypub.Activity{}
+    err = json.Unmarshal(body, &activity)
+    if err != nil {
+        return err
+    }
+
+    var tagScheme struct {
+        Tag []*activitypub.Object `json:"tag"`
+    }
+    err = json.Unmarshal(body, &tagScheme)
+    if err != nil {
+        return err
+    }
+
+    for _, item := range tagScheme.Tag {
+        activity.Tag.Append(item)
+    }
+
+    switch activity.Type {
+        case activitypub.FollowType: println("Follow")
+    }
+
+    return nil
 }

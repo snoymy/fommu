@@ -69,3 +69,13 @@ func (r *SessionsRepoImpl) FindSessionByID(ctx context.Context, id string) (*ent
 
     return sessions[0], nil
 }
+
+
+func (r *SessionsRepoImpl) DeleteSession(ctx context.Context, id string) error {
+    _, err := r.db.Exec("delete from sessions where id=$1", id)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
