@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"app/internal/activitypub/core/adapter"
 	"app/internal/activitypub/core/repo"
 	"app/internal/appstatus"
 	"context"
@@ -11,13 +10,11 @@ import (
 
 type FollowUserUsecase struct {
     userRepo repo.UsersRepo
-    activitypubAdapter adapter.ActivitypubAdapter
 }
 
-func NewFollowUserUsecase(userRepo repo.UsersRepo, activitypubAdapter adapter.ActivitypubAdapter) *FollowUserUsecase {
+func NewFollowUserUsecase(userRepo repo.UsersRepo) *FollowUserUsecase {
     return &FollowUserUsecase{
         userRepo: userRepo,
-        activitypubAdapter: activitypubAdapter,
     }
 }
 
