@@ -6,10 +6,13 @@ import (
 	"app/internal/types"
 	"app/internal/utils"
 	"context"
+	"net/url"
+	"strings"
 
-	"github.com/snoymy/activitypub"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/microcosm-cc/bluemonday"
+	"github.com/snoymy/activitypub"
 )
 
 type UserRepository struct {
@@ -48,6 +51,8 @@ func (r *UserRepository) FindUserByActorId(ctx context.Context, actorId string) 
         return users[0], nil
     }
 
+    println(actorId)
+
     person, err := r.apClient.GetUserByUrl(ctx, actorId)
     if err != nil {
         return nil, err
@@ -67,6 +72,12 @@ func (r *UserRepository) FindUserByActorId(ctx context.Context, actorId string) 
     }
 
     user, err := r.mapPersonToUser(person)
+    user.ID = uuid.New().String()
+    user.Remote = true
+    parsedUrl, err := url.Parse(user.ActorId.ValueOrZero())
+    user.Domain = strings.TrimPrefix(parsedUrl.Hostname(), "www.")
+    user.Remote = true
+    user.Discoverable = true
 
     p := bluemonday.UGCPolicy()
     user.Username = p.Sanitize(user.Username)
@@ -79,6 +90,8 @@ func (r *UserRepository) FindUserByActorId(ctx context.Context, actorId string) 
     if following != nil {
         user.FollowingCount = int(following.TotalItems)
     }
+
+    go r.CreateUser(ctx, user)
 
     return user, nil
 }
@@ -109,6 +122,32 @@ func (r *UserRepository) FindUserByEmail(ctx context.Context, email string) (*en
     }
 
     return users[0], nil
+}
+
+func (r *UserRepository) CreateUser(ctx context.Context, user *entity.UserEntity) error {
+    _, err := r.db.Exec(
+        `
+        insert into users (
+            id, email, password_hash, status, username, display_name, name_prefix, name_suffix, 
+            bio, avatar, banner, attachment, tag, discoverable, auto_approve_follower, follower_count, following_count, 
+            public_key, private_key, actor_id, url, inbox_url, outbox_url, followers_url, following_url, Domain, remote, redirect_url, 
+            create_at, update_at
+        )
+        values
+        ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30)
+        `,
+        user.ID, user.Email, user.PasswordHash, user.Status, user.Username, user.Displayname,
+        user.NamePrefix, user.NameSuffix, user.Bio, user.Avatar, user.Banner, user.Attachment, user.Tag, user.Discoverable, 
+        user.AutoApproveFollower, user.FollowerCount, user.FollowingCount, user.PublicKey, user.PrivateKey, user.ActorId,
+        user.URL, user.InboxURL, user.OutboxURL, user.FollowersURL, user.FollowingURL, user.Domain, user.Remote, user.RedirectURL, 
+        user.CreateAt, user.UpdateAt,
+    )
+
+    if err != nil {
+        return err
+    }
+
+    return nil
 }
 
 func (a *UserRepository) mapPersonToUser(person *activitypub.Person) (*entity.UserEntity, error) {

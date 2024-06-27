@@ -1,20 +1,29 @@
 package usecase
 
 import (
+	"app/internal/activitypub/core/entity"
 	"app/internal/activitypub/core/repo"
 	"app/internal/appstatus"
+	"app/internal/config"
 	"context"
+	"net/url"
+	"path"
+	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/snoymy/activitypub"
 )
 
 type FollowUserUsecase struct {
     userRepo repo.UsersRepo
+    followingRepo repo.FollowingRepo
 }
 
-func NewFollowUserUsecase(userRepo repo.UsersRepo) *FollowUserUsecase {
+func NewFollowUserUsecase(userRepo repo.UsersRepo, followingRepo repo.FollowingRepo) *FollowUserUsecase {
     return &FollowUserUsecase{
         userRepo: userRepo,
+        followingRepo: followingRepo,
     }
 }
 
@@ -28,16 +37,55 @@ func (uc *FollowUserUsecase) Exec(ctx context.Context, activity *activitypub.Act
         return appstatus.BadValue("Invalid activity type.")
     }
     // find follower user by actor id
-    followerId := activity.GetID().String()
-    _, err := uc.userRepo.FindUserByActorId(ctx, followerId)
+    if !activity.Actor.IsLink() {
+        appstatus.BadValue("Unsupport actor type.")
+    }
+    followerId := activity.Actor.GetLink().String()
+    follower, err := uc.userRepo.FindUserByActorId(ctx, followerId)
     if err != nil {
         return err
     }
+    if follower == nil {
+        return appstatus.NotFound("Follower not found.")
+    }
 
     // check if object is url
-    // extract username from url
-    // find target user by username with domain
+    if !activity.Object.IsLink() {
+        appstatus.BadValue("Unsupport object type.")
+    }
+    targetId := activity.Object.GetLink().String()
+
+    parsedUrl, err := url.Parse(targetId)
+    if err != nil {
+        return appstatus.BadValue("Invalid following ID.")
+    }
+    if strings.TrimPrefix(parsedUrl.Hostname(), "www.") != config.Fommu.Domain {
+        return appstatus.BadValue("Invalid following ID.")
+    }
+    targetUsername := path.Base(parsedUrl.Path)
+    target, err := uc.userRepo.FindUserByUsername(ctx, targetUsername, config.Fommu.Domain)
+    if err != nil {
+        return err
+    }
+    if target == nil {
+        return appstatus.NotFound("Target user not found.")
+    }
+
+    following := entity.NewFollowingEntity()
+    following.ID = uuid.New().String()
+    following.Follower = follower.ID
+    following.Following = target.ID
+    if target.AutoApproveFollower == true {
+        following.Status = "followed"
+    } else {
+        following.Status = "pending"
+    }
+    following.CreateAt = time.Now().UTC()
     // insert data to db
+    if err := uc.followingRepo.CreateFollowing(ctx, following); err != nil {
+        return err
+    }
+
     return nil
 }
 

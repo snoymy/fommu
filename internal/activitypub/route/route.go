@@ -15,16 +15,18 @@ import (
 func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient) {
     // repo and adapter
     userRepo := repo.NewUserRepoImpl(db, apClient)
+    followingRepo := repo.NewFollowingRepoImpl(db)
 
     // usecase
     verifySignature := usecase.NewVerifySignatureUsecase(userRepo)
     getUser := usecase.NewGetUserUsecase(userRepo)
     findresource := usecase.NewFindResourceUsecase(userRepo)
+    followUser := usecase.NewFollowUserUsecase(userRepo, followingRepo)
 
     // controller and middleware
     verifySignatureMiddleware := middleware.NewVerifyMiddleware(verifySignature)
     wellknown := controller.NewWellKnownController(findresource) 
-    userController := controller.NewAPUsersController(getUser) 
+    userController := controller.NewAPUsersController(getUser, followUser)
 
     r.Route("/", func(r chi.Router) {
         r.Get("/users/{username}", handler.Handle(userController.GetUser)) 
