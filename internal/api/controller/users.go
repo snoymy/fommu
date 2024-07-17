@@ -4,6 +4,7 @@ import (
 	"app/internal/api/core/dto"
 	"app/internal/api/core/usecase"
 	"app/internal/appstatus"
+	"app/internal/log"
 	"app/internal/types"
 	"encoding/json"
 	"net/http"
@@ -37,8 +38,14 @@ func NewUsersController(
 }
 
 func (c *UsersController) SignUp(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
     var body map[string]interface{}
     if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+        log.Error(ctx, "Error: " + err.Error())
         return appstatus.BadValue("Cannot decode json.")
     }
 
@@ -46,9 +53,10 @@ func (c *UsersController) SignUp(w http.ResponseWriter, r *http.Request) error {
     password, _ := body["password"].(string)
     email, _ := body["email"].(string)
 
-    err := c.signup.Exec(r.Context(), email, username, password)
+    err := c.signup.Exec(ctx, email, username, password)
 
     if err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return err
     }
 
@@ -56,32 +64,48 @@ func (c *UsersController) SignUp(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c *UsersController) LookUp(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
     username := r.URL.Query().Get("acct")
     
-    user, err := c.getUser.Exec(r.Context(), username)
+    user, err := c.getUser.Exec(ctx, username)
 
     if err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return err
     }
 
     if user == nil {
-        return appstatus.NotFound()
+        err := appstatus.NotFound("User not found.")
+        log.Info(ctx, "Response with error: " + err.Error())
+        return err
     }
 
     return nil
 }
 
 func (c *UsersController) Search(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
     username := r.URL.Query().Get("acct")
     
-    users, err := c.searchUser.Exec(r.Context(), username)
+    users, err := c.searchUser.Exec(ctx, username)
 
     if err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return err
     }
 
     if users == nil {
-        return appstatus.NotFound()
+        err := appstatus.NotFound("Users not found.")
+        log.Info(ctx, "Error response: " + err.Error())
+        return err
     }
 
     res := []map[string]interface{}{}
@@ -102,6 +126,10 @@ func (c *UsersController) Search(w http.ResponseWriter, r *http.Request) error {
     }
 
     bytes, err := json.Marshal(res)
+    if err != nil {
+        log.Error(ctx, err.Error())
+        return appstatus.InternalServerError("Something went wrong.")
+    }
 
     w.Header().Add("Content-Type", "application/json")
     w.Write(bytes)
@@ -110,18 +138,28 @@ func (c *UsersController) Search(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c *UsersController) GetUser(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
     username := chi.URLParam(r, "username")
 
+    log.Info(ctx, "Replace escaped character.")
     username = strings.ReplaceAll(username, "%40", "@")
     username = strings.ReplaceAll(username, "%3A", ":")
-    user, err := c.getUser.Exec(r.Context(), username)
+
+    user, err := c.getUser.Exec(ctx, username)
 
     if err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return err
     }
 
     if user == nil {
-        return appstatus.NotFound()
+        err := appstatus.NotFound("User not found.")
+        log.Info(ctx, "Response with error: " + err.Error())
+        return err
     }
 
     res := map[string]interface{}{
@@ -142,6 +180,10 @@ func (c *UsersController) GetUser(w http.ResponseWriter, r *http.Request) error 
     }
 
     bytes, err := json.Marshal(res)
+    if err != nil {
+        log.Error(ctx, err.Error())
+        return appstatus.InternalServerError("Something went wrong.")
+    }
 
     w.Header().Add("Content-Type", "application/json")
     w.Write(bytes)
@@ -150,10 +192,16 @@ func (c *UsersController) GetUser(w http.ResponseWriter, r *http.Request) error 
 }
 
 func (c *UsersController) EditAccount(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
     username := chi.URLParam(r, "username")
 
     var body map[string]interface{}
     if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+        log.Error(ctx, "Error: " + err.Error())
         return appstatus.BadValue("Cannot decode json.")
     }
     
@@ -166,7 +214,9 @@ func (c *UsersController) EditAccount(w http.ResponseWriter, r *http.Request) er
             value := types.NewNullable(v)
             account.Email = &value
         } else {
-            return appstatus.BadValue("Invalid value")
+            err := appstatus.BadValue("Invalid value")
+            log.Info(ctx, "Response with error: " + err.Error())
+            return err
         }
     }
 
@@ -178,7 +228,9 @@ func (c *UsersController) EditAccount(w http.ResponseWriter, r *http.Request) er
             value := types.NewNullable(v)
             account.CurrentPassword = &value
         } else {
-            return appstatus.BadValue("Invalid value")
+            err := appstatus.BadValue("Invalid value")
+            log.Info(ctx, "Response with error: " + err.Error())
+            return err
         }
     }
 
@@ -190,11 +242,14 @@ func (c *UsersController) EditAccount(w http.ResponseWriter, r *http.Request) er
             value := types.NewNullable(v)
             account.NewPassword = &value
         } else {
-            return appstatus.BadValue("Invalid value")
+            err := appstatus.BadValue("Invalid value")
+            log.Info(ctx, "Response with error: " + err.Error())
+            return err
         }
     }
 
-    if err := c.editAccount.Exec(r.Context(), username, account); err != nil {
+    if err := c.editAccount.Exec(ctx, username, account); err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return err
     }
 
@@ -202,10 +257,16 @@ func (c *UsersController) EditAccount(w http.ResponseWriter, r *http.Request) er
 }
 
 func (c *UsersController) EditProfile(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
     username := chi.URLParam(r, "username")
 
     var body map[string]interface{}
     if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return appstatus.BadValue("Cannot decode json.")
     }
     
@@ -218,7 +279,9 @@ func (c *UsersController) EditProfile(w http.ResponseWriter, r *http.Request) er
             value := types.NewNullable(v)
             profile.Displayname = &value
         } else {
-            return appstatus.BadValue("Invalid value")
+            err := appstatus.BadValue("Invalid value")
+            log.Info(ctx, "Response with error: " + err.Error())
+            return err
         }
     }
 
@@ -230,7 +293,9 @@ func (c *UsersController) EditProfile(w http.ResponseWriter, r *http.Request) er
             value := types.NewNullable(v)
             profile.Bio = &value
         } else {
-            return appstatus.BadValue("Invalid value")
+            err := appstatus.BadValue("Invalid value")
+            log.Info(ctx, "Response with error: " + err.Error())
+            return err
         }
     }
 
@@ -242,7 +307,9 @@ func (c *UsersController) EditProfile(w http.ResponseWriter, r *http.Request) er
             value := types.NewNullable(v)
             profile.Avatar = &value
         } else {
-            return appstatus.BadValue("Invalid value")
+            err := appstatus.BadValue("Invalid value")
+            log.Info(ctx, "Response with error: " + err.Error())
+            return err
         }
     }
 
@@ -254,7 +321,9 @@ func (c *UsersController) EditProfile(w http.ResponseWriter, r *http.Request) er
             value := types.NewNullable(v)
             profile.Banner = &value
         } else {
-            return appstatus.BadValue("Invalid value")
+            err := appstatus.BadValue("Invalid value")
+            log.Info(ctx, "Response with error: " + err.Error())
+            return err
         }
     }
 
@@ -266,7 +335,9 @@ func (c *UsersController) EditProfile(w http.ResponseWriter, r *http.Request) er
             value := types.NewNullable(types.JsonObject(v))
             profile.Preference = &value
         } else {
-            return appstatus.BadValue("Invalid value")
+            err := appstatus.BadValue("Invalid value")
+            log.Info(ctx, "Response with error: " + err.Error())
+            return err
         }
     }
     /*
@@ -347,7 +418,8 @@ func (c *UsersController) EditProfile(w http.ResponseWriter, r *http.Request) er
     }
     */
 
-    if err := c.editProfile.Exec(r.Context(), username, profile); err != nil {
+    if err := c.editProfile.Exec(ctx, username, profile); err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return err
     }
 

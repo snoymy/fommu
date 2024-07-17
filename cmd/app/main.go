@@ -7,6 +7,8 @@ import (
 	"app/internal/config/database"
 	"app/internal/handler"
 	"app/internal/httpclient"
+	"app/internal/log"
+	"context"
 	"net/http"
 	"strconv"
 
@@ -16,13 +18,19 @@ import (
 
 func main() {
     config.Init()
+
+    ctx := context.Background()
+
+    log.Info(ctx, "Init database connection...")
     db := database.NewConnection()
     defer db.Close()
+
     apClient := httpclient.NewActivitypubClient()
 
     if err := database.TestConnection(db); err != nil {
-        panic(err.Error())
+        log.Panic(ctx, err.Error())
     }
+    log.Info(ctx, "Init database succeed")
 
     handler.ErrorHandler = handler.HandleError
 
@@ -38,7 +46,8 @@ func main() {
     }))
 
     apiroute.InitRoute(r, db, apClient)
-    aproute.InitRoute(r, db, apClient)
+    aproute.InitRouteDI(r, db, apClient)
 
+    log.Info(ctx, "Listening port: " + strconv.Itoa(config.Fommu.Port))
     http.ListenAndServe(":" + strconv.Itoa(config.Fommu.Port), r)
 }

@@ -3,7 +3,9 @@ package usecase
 import (
 	"app/internal/activitypub/core/entity"
 	"app/internal/activitypub/core/repo"
+	"app/internal/appstatus"
 	"app/internal/config"
+	"app/internal/log"
 	"context"
 )
 
@@ -18,16 +20,23 @@ func NewGetUserUsecase(userRepo repo.UsersRepo) *GetUserUsecase {
 }
 
 func (uc *GetUserUsecase) Exec(ctx context.Context, username string) (*entity.UserEntity, error) {
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
     if username == "" {
+        log.Info(ctx, "User not found")
         return nil, nil
     }
 
+    log.Info(ctx, "Find user")
     user, err := uc.userRepo.FindUserByUsername(ctx, username, config.Fommu.Domain)
     if err != nil {
-        return nil, err
+        log.Error(ctx, "Error: " + err.Error())
+        return nil, appstatus.InternalServerError("Unable to find user")
     }
 
     if user == nil {
+        log.Info(ctx, "User not found")
         return nil, nil
     }
 

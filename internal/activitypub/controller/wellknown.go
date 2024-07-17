@@ -1,8 +1,10 @@
 package controller
 
 import (
-	"app/internal/config"
 	"app/internal/activitypub/core/usecase"
+	"app/internal/appstatus"
+	"app/internal/config"
+	"app/internal/log"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -19,20 +21,29 @@ func NewWellKnownController(findactor *usecase.FindResourceUsecase) *WellKnown {
 }
 
 func (f *WellKnown) WebFinger(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
+    log.Info(ctx, "Get resource from query param")
     resource := r.URL.Query().Get("resource")
 
-    user, err := f.findresource.Exec(r.Context(), resource)
+    user, err := f.findresource.Exec(ctx, resource)
     if err != nil {
+        log.Info(ctx, "Response with Error: ", err.Error())
         return err
     }
     if user == nil {
+        log.Info(ctx, "User not found")
         w.WriteHeader(404)
         return nil
     }
 
+    log.Info(ctx, "Build response")
     userURL, err := url.JoinPath(config.Fommu.URL, "users", user.Username)
     if err != nil {
-        return err
+        log.Error(ctx, "Error: ", err.Error())
+        return appstatus.InternalServerError("Something went wrong.")
     }
 
     res := map[string]interface{}{
@@ -52,6 +63,10 @@ func (f *WellKnown) WebFinger(w http.ResponseWriter, r *http.Request) error {
     }
 
     bytes, err := json.Marshal(res)
+    if err != nil {
+        log.Error(ctx, "Error: " + err.Error())
+        return appstatus.InternalServerError("Something went wrong.")
+    }
 
     w.Header().Add("Content-Type", "application/json")
     _, err = w.Write(bytes)

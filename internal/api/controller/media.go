@@ -1,8 +1,9 @@
 package controller
 
 import (
-	"app/internal/appstatus"
 	"app/internal/api/core/usecase"
+	"app/internal/appstatus"
+	"app/internal/log"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -23,16 +24,25 @@ func NewMediaController(uploadFileUsecase *usecase.UploadFileUsecase, getFileUse
 }
 
 func (c *MediaController) UploadFile(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
+    log.Info(ctx, "Parse Multi part form")
     if err := r.ParseMultipartForm(30 << 20); err != nil {
+        log.Error(ctx, "Response with error: " + err.Error())
         return err
     }
 
+    log.Info(ctx, "Get form file from request")
     file, handler, err := r.FormFile("file")
     if err != nil {
+        log.Error(ctx, "Response with error: " + err.Error())
         return err
     }
     defer file.Close()
 
+    log.Info(ctx, "Getting file metadata")
     fileHeader := make([]byte, 512) // Read first 512 bytes
     bytesRead, err := file.Read(fileHeader)
     if err != nil {
@@ -52,11 +62,13 @@ func (c *MediaController) UploadFile(w http.ResponseWriter, r *http.Request) err
     mimeType := http.DetectContentType(fileHeader)
     userId, ok := r.Context().Value("userId").(string)
     if !ok {
+        log.Warn(ctx, "Cannot get user id")
         return appstatus.InternalServerError("Cannot get user id.")
     }
 
-    media, err := c.uploadFileUsecase.Exec(r.Context(), fileBytes, fileName, size, mimeType, userId)
+    media, err := c.uploadFileUsecase.Exec(ctx, fileBytes, fileName, size, mimeType, userId)
     if err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return err
     }
 
@@ -68,6 +80,10 @@ func (c *MediaController) UploadFile(w http.ResponseWriter, r *http.Request) err
     }
 
     bytes, err := json.Marshal(res)
+    if err != nil {
+        log.Error(ctx, err.Error())
+        return appstatus.InternalServerError("Something went wrong.")
+    }
 
     w.Header().Add("Content-Type", "application/json")
     w.Write(bytes)
@@ -76,22 +92,32 @@ func (c *MediaController) UploadFile(w http.ResponseWriter, r *http.Request) err
 }
 
 func (c *MediaController) GetFile(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
     fileName := chi.URLParam(r, "fileName")
     if fileName == "" {
+        log.Info(ctx, "File name is empty")
         return appstatus.BadValue("No file name provided.")
     }
 
-    fileBytes, media, err := c.getFileUsecase.Exec(r.Context(), fileName)
+    fileBytes, media, err := c.getFileUsecase.Exec(ctx, fileName)
     if err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return err
     }
 
     if media == nil {
-        return appstatus.NotFound("Media not found.")
+        err := appstatus.NotFound("Media not found.")
+        log.Info(ctx, "Response with error: " + err.Error())
+        return err
     }
 
     if fileBytes == nil {
-        return appstatus.NotFound("File not found.")
+        err := appstatus.NotFound("File not found.")
+        log.Info(ctx, "Response with error: " + err.Error())
+        return err
     }
 
 	w.Header().Set("Content-Type", media.MimeType)

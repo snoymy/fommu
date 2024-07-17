@@ -4,6 +4,7 @@ import (
 	"app/internal/activitypub/core/usecase"
 	"app/internal/appstatus"
 	"app/internal/config"
+	"app/internal/log"
 	"app/internal/utils"
 	"encoding/json"
 	"fmt"
@@ -14,9 +15,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/snoymy/activitypub"
 	"github.com/go-ap/jsonld"
 	"github.com/go-chi/chi/v5"
+	"github.com/snoymy/activitypub"
 )
 
 type APUsersController struct {
@@ -30,42 +31,60 @@ func NewAPUsersController(getUser *usecase.GetUserUsecase) *APUsersController {
 }
 
 func (f *APUsersController) GetUser(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
+    log.Info(ctx, "Get Accept type from header")
     acceptHeader := r.Header.Get("Accept")
     if !strings.Contains(acceptHeader, "application/activity+json") && !strings.Contains(acceptHeader, jsonld.ContentType) {
-        return appstatus.NotAccept(fmt.Sprintf("Invalid header: Accept is %s, not activity type.", acceptHeader))
+        err := appstatus.NotAccept(fmt.Sprintf("Invalid header: Accept is %s, not activity type.", acceptHeader))
+        log.Info(ctx, "Response with Error: " + err.Error())
+        return err
     }
 
+    log.Info(ctx, "Get username from path param")
     username := chi.URLParam(r, "username")
 
-    user, err := f.getUser.Exec(r.Context(), username)
+    user, err := f.getUser.Exec(ctx, username)
     if err != nil {
+        log.Error(ctx, "Response with Error: " + err.Error())
         return err
     }
 
     if user == nil {
+        log.Info(ctx, "User not found")
         return appstatus.NotFound()
     }
 
+    log.Info(ctx, "Build user url")
     userURL, err := url.JoinPath(config.Fommu.URL, "users", user.Username)
     if err != nil {
-        return err
+        log.Error(ctx, "Error: " + err.Error())
+        return appstatus.InternalServerError("Something went wrong.")
     }
     inboxURL, err := url.JoinPath(userURL, "inbox")
     if err != nil {
-        return err
+        log.Error(ctx, "Error: " + err.Error())
+        return appstatus.InternalServerError("Something went wrong.")
     }
     outbox, err := url.JoinPath(userURL, "outbox")
     if err != nil {
-        return err
+        log.Error(ctx, "Error: " + err.Error())
+        return appstatus.InternalServerError("Something went wrong.")
     }
     followersURL, err := url.JoinPath(userURL, "followers")
     if err != nil {
-        return err
+        log.Error(ctx, "Error: " + err.Error())
+        return appstatus.InternalServerError("Something went wrong.")
     }
     followingURL, err := url.JoinPath(userURL, "following")
     if err != nil {
-        return err
+        log.Error(ctx, "Error: " + err.Error())
+        return appstatus.InternalServerError("Something went wrong.")
     }
+
+    log.Info(ctx, "Create ActivityPub Person")
     p := activitypub.PersonNew(activitypub.IRI(userURL))
 
     p.Name = activitypub.NaturalLanguageValuesNew(activitypub.LangRefValueNew(activitypub.DefaultLang, user.Displayname))
@@ -98,7 +117,8 @@ func (f *APUsersController) GetUser(w http.ResponseWriter, r *http.Request) erro
     for _, item := range user.Attachment.ValueOrZero() {
         attachment, err := utils.MapToStruct[activitypub.Object](item.(map[string]interface{}))
         if err != nil {
-            return err
+            log.Error(ctx, "Error: " + err.Error())
+            return appstatus.InternalServerError("Something went wrong.")
         }
         p.Attachment.Append(attachment)
     }
@@ -106,17 +126,20 @@ func (f *APUsersController) GetUser(w http.ResponseWriter, r *http.Request) erro
     for _, item := range user.Tag.ValueOrZero() {
         tag, err := utils.MapToStruct[activitypub.Object](item.(map[string]interface{}))
         if err != nil {
-            return err
+            log.Error(ctx, "Error: " + err.Error())
+            return appstatus.InternalServerError("Something went wrong.")
         }
         p.Tag.Append(tag)
     }
 
+    log.Info(ctx, "Build JSON-LD")
     bytes, err := jsonld.WithContext(
         jsonld.IRI(activitypub.ActivityBaseURI),
     ).Marshal(p)
 
     if err != nil {
-        return err
+        log.Error(ctx, "Error: " + err.Error())
+        return appstatus.InternalServerError("Something went wrong.")
     }
 
     w.Header().Add("Content-Type", "application/activity+json")
@@ -129,7 +152,7 @@ func (f *APUsersController) Inbox(w http.ResponseWriter, r *http.Request) error 
     acceptHeader := r.Header.Get("Signature")
     // j, _ := json.Marshal(r.Header)
     fmt.Println("Signature", acceptHeader)
-  requestBuffer, err := httputil.DumpRequest(r, true)
+    requestBuffer, err := httputil.DumpRequest(r, true)
     if err != nil {
     fmt.Println("Error dumping request:", err)
     return nil

@@ -7,12 +7,18 @@ import (
 	"app/internal/api/middleware"
 	"app/internal/handler"
 	"app/internal/httpclient"
+	"app/internal/log"
+	"context"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jmoiron/sqlx"
 )
 
 func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient) {
+    ctx := context.Background()
+
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
     // repo and adapter
     userRepo := repo.NewUserRepoImpl(db, apClient)
     sessionRepo := repo.NewSessionReoImpl(db)
@@ -41,12 +47,15 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient
     getToken := usecase.NewGetTokenUsecase(sessionRepo)
 
     // controller and middleware
+    requestIdMiddleware := middleware.NewRequestIDMiddleware()
     authMiddleware := middleware.NewAuthMiddleware(auth)
     userController := controller.NewUsersController(signup, getUser, editProfile, editAccount, searchUser)
     sessionsController := controller.NewSessionsController(signin, signout, refreshToken, getToken, revokeSession, verifySession)
     mediaController := controller.NewMediaController(uploadFile, getFile)
     
+    log.Info(ctx, "Init /api routes...")
     r.Route("/api", func(r chi.Router) {
+        r.Use(requestIdMiddleware)
         r.Route("/users", func(r chi.Router) {
             r.Group(func(r chi.Router) {
                 r.Use(authMiddleware)
@@ -82,4 +91,5 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient
             r.Get("/{fileName}", handler.Handle(mediaController.GetFile))
         })
     })
+    log.Info(ctx, "Init /api success")
 }

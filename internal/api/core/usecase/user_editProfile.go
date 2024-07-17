@@ -6,6 +6,7 @@ import (
 	"app/internal/api/core/validator"
 	"app/internal/appstatus"
 	"app/internal/config"
+	"app/internal/log"
 	"context"
 	"html"
 	"time"
@@ -22,18 +23,24 @@ func NewEditProfileUsecase(userRepo repo.UsersRepo) *EditProfileUsecase {
 }
 
 func (uc *EditProfileUsecase) Exec(ctx context.Context, username string, profile dto.UserProfileDTO) error {
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
     hasUpdate := false
 
     if username == "" {
+        log.Warn(ctx, "Cannot edit account, username is empty.")
         return appstatus.BadValue("username is empty.")
     }
 
     user, err := uc.userRepo.FindUserByUsername(ctx, username, config.Fommu.Domain)
     if err != nil {
-        return err
+        log.Error(ctx, "Error: " + err.Error())
+        return appstatus.InternalServerError("Something went wrong")
     }
 
     if user == nil {
+        log.Info(ctx, "User not found")
         return appstatus.NotFound("user not found.")
     }
 
@@ -43,7 +50,8 @@ func (uc *EditProfileUsecase) Exec(ctx context.Context, username string, profile
             displayname = user.Username
         } else { 
             if err := validator.ValidateDisplayname(displayname); err != nil {
-                return err
+                log.Info(ctx, "Displayname validation failed: " + err.Error())
+                return appstatus.BadValue(err.Error())
             }
         }
         user.Displayname = html.EscapeString(displayname)
@@ -113,7 +121,8 @@ func (uc *EditProfileUsecase) Exec(ctx context.Context, username string, profile
     if hasUpdate {
         user.UpdateAt.Set(time.Now().UTC())
         if err := uc.userRepo.UpdateUser(ctx, user); err != nil {
-            return err
+            log.Error(ctx, "Error: " + err.Error())
+            return appstatus.InternalServerError("Something went wrong")
         }
     }
 

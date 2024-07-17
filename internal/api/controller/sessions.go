@@ -3,6 +3,7 @@ package controller
 import (
 	"app/internal/api/core/usecase"
 	"app/internal/appstatus"
+	"app/internal/log"
 	"app/internal/types"
 	"app/internal/utils"
 	"encoding/json"
@@ -40,9 +41,14 @@ func NewSessionsController(
 }
 
 func (c *SessionsController) Signin(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
     var body map[string]interface{}
     if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-        return err
+        log.Error(ctx, "Error: " + err.Error())
+        return appstatus.BadValue("Cannot decode json.")
     }
 
     email, _ := body["email"].(string)
@@ -54,8 +60,9 @@ func (c *SessionsController) Signin(w http.ResponseWriter, r *http.Request) erro
         "device": device,
     }
 
-    session, err := c.signin.Exec(r.Context(), email, password, clientData)
+    session, err := c.signin.Exec(ctx, email, password, clientData)
     if err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return err
     }
 
@@ -78,6 +85,10 @@ func (c *SessionsController) Signin(w http.ResponseWriter, r *http.Request) erro
     })
 
     bytes, err := json.Marshal(res)
+    if err != nil {
+        log.Error(ctx, err.Error())
+        return appstatus.InternalServerError("Something went wrong.")
+    }
 
     w.Header().Add("Content-Type", "application/json")
     w.Write(bytes)
@@ -86,12 +97,18 @@ func (c *SessionsController) Signin(w http.ResponseWriter, r *http.Request) erro
 }
 
 func (c *SessionsController) SignOut(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
     sessionId, err := r.Cookie("session_id")
     if err != nil {
+        log.Warn(ctx, "Response with error: " + err.Error())
         return appstatus.InvalidSession("Session not found")
     }
 
-    if err := c.signout.Exec(r.Context(), sessionId.Value); err != nil {
+    if err := c.signout.Exec(ctx, sessionId.Value); err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return err
     }
 
@@ -110,20 +127,29 @@ func (c *SessionsController) SignOut(w http.ResponseWriter, r *http.Request) err
 }
 
 func (c *SessionsController) RefreshToken(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
+    log.Info(ctx, "Decode json")
     var body map[string]interface{}
     if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-        return err
+        log.Error(ctx, "Response with error: " + err.Error())
+        return appstatus.InternalServerError("Something went wrong")
     }
 
+    log.Info(ctx, "Get session id from cookie")
     sessionId, err := r.Cookie("session_id")
     if err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return appstatus.InvalidSession("Session not found")
     }
 
     refreshToken, _ := body["refresh_token"].(string)
 
-    session, err := c.refreshToken.Exec(r.Context(), sessionId.Value, refreshToken)
+    session, err := c.refreshToken.Exec(ctx, sessionId.Value, refreshToken)
     if err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return err
     }
 
@@ -135,6 +161,10 @@ func (c *SessionsController) RefreshToken(w http.ResponseWriter, r *http.Request
     }
 
     bytes, err := json.Marshal(res)
+    if err != nil {
+        log.Error(ctx, err.Error())
+        return appstatus.InternalServerError("Something went wrong.")
+    }
 
     w.Header().Add("Content-Type", "application/json")
     w.Write(bytes)
@@ -143,13 +173,20 @@ func (c *SessionsController) RefreshToken(w http.ResponseWriter, r *http.Request
 }
 
 func (c *SessionsController) GetToken(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
+    log.Info(ctx, "Get session id from cookie")
     sessionId, err := r.Cookie("session_id")
     if err != nil {
+        log.Warn(ctx, "Response with error: " + err.Error())
         return appstatus.InvalidSession("Session not found")
     }
 
-    session, err := c.getToken.Exec(r.Context(), sessionId.Value)
+    session, err := c.getToken.Exec(ctx, sessionId.Value)
     if err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return err
     }
 
@@ -161,6 +198,10 @@ func (c *SessionsController) GetToken(w http.ResponseWriter, r *http.Request) er
     }
 
     bytes, err := json.Marshal(res)
+    if err != nil {
+        log.Error(ctx, err.Error())
+        return appstatus.InternalServerError("Something went wrong.")
+    }
 
     w.Header().Add("Content-Type", "application/json")
     w.Write(bytes)
@@ -169,19 +210,27 @@ func (c *SessionsController) GetToken(w http.ResponseWriter, r *http.Request) er
 }
 
 func (c *SessionsController) VerifySession(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
+    log.Info(ctx, "Get session id from cookie")
     sessionId, err := r.Cookie("session_id")
     if err != nil {
+        log.Warn(ctx, "Response with error: " + err.Error())
         return appstatus.InvalidSession("Session not found")
     }
 
-    user, err := c.verifySession.Exec(r.Context(), sessionId.Value)
-
+    user, err := c.verifySession.Exec(ctx, sessionId.Value)
     if err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return err
     }
 
     if user == nil {
-        return appstatus.NotFound()
+        err := appstatus.NotFound()
+        log.Info(ctx, "Response with error: " + err.Error())
+        return err
     }
 
     res := map[string]interface{}{
@@ -203,6 +252,10 @@ func (c *SessionsController) VerifySession(w http.ResponseWriter, r *http.Reques
     }
 
     bytes, err := json.Marshal(res)
+    if err != nil {
+        log.Error(ctx, err.Error())
+        return appstatus.InternalServerError("Something went wrong.")
+    }
 
     w.Header().Add("Content-Type", "application/json")
     w.Write(bytes)
@@ -211,14 +264,21 @@ func (c *SessionsController) VerifySession(w http.ResponseWriter, r *http.Reques
 }
 
 func (c *SessionsController) RevokeSession(w http.ResponseWriter, r *http.Request) error {
+    ctx := r.Context()
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
+    log.Info(ctx, "Get session id from cookie")
     currentSessionId, err := r.Cookie("session_id")
     if err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return appstatus.InvalidSession("Session not found")
     }
 
     sessionId := chi.URLParam(r, "sessionId")
 
-    if err := c.revokeSession.Exec(r.Context(), currentSessionId.Value, sessionId); err != nil {
+    if err := c.revokeSession.Exec(ctx, currentSessionId.Value, sessionId); err != nil {
+        log.Info(ctx, "Response with error: " + err.Error())
         return err
     }
 

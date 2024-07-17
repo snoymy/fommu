@@ -25,12 +25,20 @@ type dbConfig struct {
     DBPass      string
 }
 
+type logConfig struct {
+    Style       string
+    Debug       bool
+    DumpSqlite  bool
+}
+
 var DB *dbConfig
 var Fommu *fommuConfig
+var Log *logConfig
 
 func Init() {
     initFommuConfig()
     initDBConfig()
+    initLogConfig()
 }
 
 func initFommuConfig() {
@@ -71,4 +79,15 @@ func initDBConfig() {
     DB.DBName = os.Getenv("dbname")
     DB.DBUser = os.Getenv("dbuser")
     DB.DBPass = os.Getenv("dbpass")
+}
+
+func initLogConfig() {
+    Log = &logConfig{}
+    Log.Style = viper.GetString("log.style")
+    Log.DumpSqlite = viper.GetBool("log.dumpsqlite")
+    if os.Getenv("env") == "dev" {
+        Log.Debug = true
+    } else {
+        Log.Debug = false
+    }
 }

@@ -4,3 +4,6 @@ fommu:
   #domain: 127.0.0.1:3000
   filehost: http://127.0.0.1:3000/api/media
   #filehost: https://fommu.loca.lt/api/media
+log:
+  style: 
+  dumpsqlite: true

@@ -7,12 +7,19 @@ import (
 	"app/internal/activitypub/middleware"
 	"app/internal/handler"
 	"app/internal/httpclient"
+	"app/internal/log"
+	"context"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jmoiron/sqlx"
 )
 
 func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient) {
+    ctx := context.Background()
+
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
     // repo and adapter
     userRepo := repo.NewUserRepoImpl(db, apClient)
 
@@ -26,6 +33,7 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient
     wellknown := controller.NewWellKnownController(findresource) 
     userController := controller.NewAPUsersController(getUser) 
 
+    log.Info(ctx, "Init / routes...")
     r.Route("/", func(r chi.Router) {
         r.Get("/users/{username}", handler.Handle(userController.GetUser)) 
 
@@ -38,4 +46,5 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient
             r.Get("/webfinger", handler.Handle(wellknown.WebFinger)) 
         })
     })
+    log.Info(ctx, "Init / success")
 }

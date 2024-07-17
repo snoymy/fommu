@@ -3,6 +3,7 @@ module app
 go 1.22.2
 
 require (
+	github.com/dusted-go/logging v1.2.2
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-chi/cors v1.2.1
@@ -10,6 +11,7 @@ require (
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/jmoiron/sqlx v1.3.5
+	github.com/mattn/go-sqlite3 v1.14.6
 	github.com/microcosm-cc/bluemonday v1.0.26
 	github.com/snoymy/activitypub v0.0.0-20240626154602-a13d8706ff11
 	github.com/spf13/viper v1.18.2

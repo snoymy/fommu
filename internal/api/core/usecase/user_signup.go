@@ -6,6 +6,7 @@ import (
 	"app/internal/api/core/validator"
 	"app/internal/appstatus"
 	"app/internal/config"
+	"app/internal/log"
 	"app/internal/types"
 	"context"
 	"crypto/rand"
@@ -30,44 +31,59 @@ func NewSignupUsecase(userRepository repo.UsersRepo) *SignupUsecase {
 }
 
 func (uc *SignupUsecase) Exec(ctx context.Context, email string, username string, password string) error {
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
     var (
         existUser *entity.UserEntity
         err error
     )
 
     // validate username
+    log.Info(ctx, "Validate username.")
     if err := validator.ValidateUsername(username); err != nil {
         return appstatus.BadUsername(err.Error())
     }
 
     // check if username is used
+    log.Info(ctx, "Check username if used.")
     existUser, err = uc.userRepository.FindUserByUsername(ctx, username, config.Fommu.Domain)
     if err != nil {
-        return appstatus.InternalServerError(err.Error())
+        log.Error(ctx, "Error: " + err.Error())
+        return appstatus.InternalServerError("Somethig went wrong")
     }
     if existUser != nil {
+        log.Info(ctx, "Username already used.")
         return appstatus.BadUsername("Username already used.")
     }
 
     // validate email
+    log.Info(ctx, "Validate email.")
     if err := validator.ValidateEmail(email); err != nil {
+        log.Info(ctx, "Email validation failed: " + err.Error())
         return appstatus.BadEmail(err.Error())
     }
 
     // check if email is used
+    log.Info(ctx, "Check email if used.")
     existUser, err = uc.userRepository.FindUserByEmail(ctx, email, config.Fommu.Domain)
     if err != nil {
-        return err
+        log.Error(ctx, "Error: " + err.Error())
+        return appstatus.InternalServerError("Somethig went wrong")
     }
     if existUser != nil {
+        log.Info(ctx, "Email already used.")
         return appstatus.BadEmail("Email already used.")
     }
 
     // validate password
+    log.Info(ctx, "Validate password.")
     if err := validator.ValidatePassword(password); err != nil {
+        log.Info(ctx, "Password validation failed: " + err.Error())
         return appstatus.BadPassword(err.Error())
     }
     
+    log.Info(ctx, "Create user entity.")
     user := entity.NewUserEntity()
     // set id
     user.ID = uuid.New().String()
@@ -78,6 +94,7 @@ func (uc *SignupUsecase) Exec(ctx context.Context, email string, username string
 
     // hash password
     // set password_hash
+    log.Info(ctx, "Hashing Password.")
     user.PasswordHash.Set(uc.hashPassword(password))
 
     // set display name
@@ -100,10 +117,12 @@ func (uc *SignupUsecase) Exec(ctx context.Context, email string, username string
     user.Tag.Set(types.JsonArray{})
 
     // generate key
+    log.Info(ctx, "Generate public/private key.")
     const bitSize = 4096
     privateKeyByte, publicKeyByte, err := uc.generateKeyPair(bitSize)
     if err != nil {
-        return appstatus.InternalServerError(err.Error())
+        log.Error(ctx, "Error: " + err.Error())
+        return appstatus.InternalServerError("Somethig went wrong")
     }
 
     // set private key
@@ -118,8 +137,10 @@ func (uc *SignupUsecase) Exec(ctx context.Context, email string, username string
     user.Status = "active"
 
     // write user to db
+    log.Info(ctx, "Write user to database.")
     if err := uc.userRepository.CreateUser(ctx, user); err != nil {
-        return appstatus.InternalServerError(err.Error())
+        log.Error(ctx, "Error: " + err.Error())
+        return appstatus.InternalServerError("Somethig went wrong")
     }
 
     return nil

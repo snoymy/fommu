@@ -1,10 +1,11 @@
 package usecase
 
 import (
-	"app/internal/appstatus"
-	"app/internal/config"
 	"app/internal/activitypub/core/entity"
 	"app/internal/activitypub/core/repo"
+	"app/internal/appstatus"
+	"app/internal/config"
+	"app/internal/log"
 	"context"
 	"strings"
 )
@@ -20,13 +21,19 @@ func NewFindResourceUsecase(userRepo repo.UsersRepo) *FindResourceUsecase {
 }
 
 func (uc *FindResourceUsecase) Exec(ctx context.Context, resource string) (*entity.UserEntity, error) {
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
+
     // validate resource
+    log.Info(ctx, "Validate resource")
     if resource == "" {
+        log.Info(ctx, "Resource value is empty")
         return nil, nil
     }
 
     ar := strings.SplitN(resource, ":", 2)
     if len(ar) < 2 {
+        log.Info(ctx, "No resource name provided")
         return nil, appstatus.NotFound()
     }
 
@@ -37,12 +44,15 @@ func (uc *FindResourceUsecase) Exec(ctx context.Context, resource string) (*enti
     }
 
     // find resource
+    log.Info(ctx, "Find user by resource")
     user, err := uc.userRepo.FindResource(ctx, handle, config.Fommu.Domain)
     if err != nil {
+        log.Error(ctx, "Error: ", err.Error())
         return nil, err
     }
 
     if user == nil {
+        log.Info(ctx, "User not found")
         return nil, nil
     }
 
