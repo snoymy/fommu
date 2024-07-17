@@ -8,6 +8,7 @@ import (
 	"app/internal/handler"
 	"app/internal/httpclient"
 	"app/internal/log"
+	"app/lib/di"
 	"context"
 
 	"github.com/go-chi/chi/v5"
@@ -19,41 +20,59 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient
 
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
+
+    container := di.New()
+
+    container.Register(func() chi.Router { return r })
+    container.Register(func() *sqlx.DB { return db })
+    container.Register(func() *httpclient.ActivitypubClient { return apClient })
     // repo and adapter
-    userRepo := repo.NewUserRepoImpl(db, apClient)
-    sessionRepo := repo.NewSessionReoImpl(db)
-    mediaRepo := repo.NewMediaRepoImpl(db)
+    container.Register(repo.NewUserRepoImpl)
+    container.Register(repo.NewSessionRepoImpl)
+    container.Register(repo.NewMediaRepoImpl)
 
     // usecase
-    auth := usecase.NewAuthUsecase(sessionRepo)
+    container.Register(usecase.NewAuthUsecase)
     
     // users
-    signup := usecase.NewSignupUsecase(userRepo)
-    getUser := usecase.NewGetUserUsecase(userRepo)
-    editProfile := usecase.NewEditProfileUsecase(userRepo)
-    editAccount := usecase.NewEditAccountUsecase(userRepo)
-    searchUser := usecase.NewSearchUserUsecase(userRepo)
+    container.Register(usecase.NewSignupUsecase)
+    container.Register(usecase.NewGetUserUsecase)
+    container.Register(usecase.NewEditProfileUsecase)
+    container.Register(usecase.NewEditAccountUsecase)
+    container.Register(usecase.NewSearchUserUsecase)
 
     // sessions
-    signin := usecase.NewSigninUsecase(userRepo, sessionRepo)
-    signout := usecase.NewSignOutUsecase(sessionRepo)
-    refreshToken := usecase.NewRefreshTokenUsecase(sessionRepo)
-    revokeSession := usecase.NewRevokeSessionUsecase(sessionRepo)
-    verifySession := usecase.NewGetIdentityUsecase(sessionRepo, userRepo)
+    container.Register(usecase.NewSigninUsecase)
+    container.Register(usecase.NewSignOutUsecase)
+    container.Register(usecase.NewRefreshTokenUsecase)
+    container.Register(usecase.NewRevokeSessionUsecase)
+    container.Register(usecase.NewGetIdentityUsecase)
 
     // media
-    uploadFile := usecase.NewUploadFileUsecase(mediaRepo)
-    getFile := usecase.NewGetFileUsecase(mediaRepo)
-    getToken := usecase.NewGetTokenUsecase(sessionRepo)
+    container.Register(usecase.NewUploadFileUsecase)
+    container.Register(usecase.NewGetFileUsecase)
+    container.Register(usecase.NewGetTokenUsecase)
 
     // controller and middleware
-    requestIdMiddleware := middleware.NewRequestIDMiddleware()
-    authMiddleware := middleware.NewAuthMiddleware(auth)
-    userController := controller.NewUsersController(signup, getUser, editProfile, editAccount, searchUser)
-    sessionsController := controller.NewSessionsController(signin, signout, refreshToken, getToken, revokeSession, verifySession)
-    mediaController := controller.NewMediaController(uploadFile, getFile)
-    
+    container.Register(middleware.NewRequestIDMiddleware)
+    container.Register(middleware.NewAuthMiddleware)
+    container.Register(controller.NewUsersController)
+    container.Register(controller.NewSessionsController)
+    container.Register(controller.NewMediaController)
+
     log.Info(ctx, "Init /api routes...")
+    container.Resolve(resolveRoute)
+    log.Info(ctx, "Init /api success")
+}
+
+func resolveRoute(
+    r chi.Router,
+    requestIdMiddleware middleware.RequestIdMiddleware, 
+    authMiddleware middleware.AuthMiddleware,
+    userController *controller.UsersController,
+    sessionsController *controller.SessionsController,
+    mediaController *controller.MediaController,
+) {
     r.Route("/api", func(r chi.Router) {
         r.Use(requestIdMiddleware)
         r.Route("/users", func(r chi.Router) {
@@ -91,5 +110,4 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient
             r.Get("/{fileName}", handler.Handle(mediaController.GetFile))
         })
     })
-    log.Info(ctx, "Init /api success")
 }

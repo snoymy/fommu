@@ -8,6 +8,7 @@ import (
 	"app/internal/handler"
 	"app/internal/httpclient"
 	"app/internal/log"
+	"app/lib/di"
 	"context"
 
 	"github.com/go-chi/chi/v5"
@@ -20,20 +21,31 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 
+    container := di.New()
+
+    container.Register(func() chi.Router { return r })
+    container.Register(func() *sqlx.DB { return db })
+    container.Register(func() *httpclient.ActivitypubClient { return apClient })
+
     // repo and adapter
-    userRepo := repo.NewUserRepoImpl(db, apClient)
+    container.Register(repo.NewUserRepoImpl)
 
     // usecase
-    verifySignature := usecase.NewVerifySignatureUsecase(userRepo)
-    getUser := usecase.NewGetUserUsecase(userRepo)
-    findresource := usecase.NewFindResourceUsecase(userRepo)
+    container.Register(usecase.NewVerifySignatureUsecase)
+    container.Register(usecase.NewGetUserUsecase)
+    container.Register(usecase.NewFindResourceUsecase)
 
     // controller and middleware
-    verifySignatureMiddleware := middleware.NewVerifyMiddleware(verifySignature)
-    wellknown := controller.NewWellKnownController(findresource) 
-    userController := controller.NewAPUsersController(getUser) 
+    container.Register(middleware.NewVerifyMiddleware)
+    container.Register(controller.NewWellKnownController)
+    container.Register(controller.NewAPUsersController)
 
     log.Info(ctx, "Init / routes...")
+    container.Resolve(resolveRoute)
+    log.Info(ctx, "Init / success")
+}
+
+func resolveRoute(r chi.Router, verifySignatureMiddleware middleware.VerifyMiddleware, userController *controller.APUsersController, wellknown *controller.WellKnown) {
     r.Route("/", func(r chi.Router) {
         r.Get("/users/{username}", handler.Handle(userController.GetUser)) 
 
@@ -46,5 +58,4 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient
             r.Get("/webfinger", handler.Handle(wellknown.WebFinger)) 
         })
     })
-    log.Info(ctx, "Init / success")
 }

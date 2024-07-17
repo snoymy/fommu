@@ -2,6 +2,7 @@ package repo
 
 import (
 	"app/internal/api/core/entity"
+	"app/internal/api/core/repo"
 	"app/internal/config"
 	"app/internal/httpclient"
 	"app/internal/types"
@@ -12,10 +13,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/snoymy/activitypub"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/microcosm-cc/bluemonday"
+	"github.com/snoymy/activitypub"
 )
 
 type UserRepository struct {
@@ -23,7 +24,7 @@ type UserRepository struct {
     apClient *httpclient.ActivitypubClient
 }
 
-func NewUserRepoImpl(db *sqlx.DB, apClient *httpclient.ActivitypubClient) *UserRepository {
+func NewUserRepoImpl(db *sqlx.DB, apClient *httpclient.ActivitypubClient) repo.UsersRepo {
     return &UserRepository{
         db: db,
         apClient: apClient,

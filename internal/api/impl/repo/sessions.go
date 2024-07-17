@@ -2,6 +2,7 @@ package repo
 
 import (
 	"app/internal/api/core/entity"
+	"app/internal/api/core/repo"
 	"context"
 
 	"github.com/jmoiron/sqlx"
@@ -11,7 +12,7 @@ type SessionsRepoImpl struct {
     db *sqlx.DB
 }
 
-func NewSessionReoImpl(db *sqlx.DB) *SessionsRepoImpl {
+func NewSessionRepoImpl(db *sqlx.DB) repo.SessionsRepo {
     return &SessionsRepoImpl{
         db: db,
     }

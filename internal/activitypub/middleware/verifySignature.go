@@ -7,7 +7,9 @@ import (
 	"net/http"
 )
 
-func NewVerifyMiddleware(verify *usecase.VerifySignatureUsecase) func(next http.Handler) http.Handler {
+type VerifyMiddleware func(http.Handler) http.Handler
+
+func NewVerifyMiddleware(verify *usecase.VerifySignatureUsecase) VerifyMiddleware {
     return func(next http.Handler) http.Handler {
         return http.HandlerFunc(handler.Handle(
             func(w http.ResponseWriter, r *http.Request) error {

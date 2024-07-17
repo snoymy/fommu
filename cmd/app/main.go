@@ -46,7 +46,7 @@ func main() {
     }))
 
     apiroute.InitRoute(r, db, apClient)
-    aproute.InitRouteDI(r, db, apClient)
+    aproute.InitRoute(r, db, apClient)
 
     log.Info(ctx, "Listening port: " + strconv.Itoa(config.Fommu.Port))
     http.ListenAndServe(":" + strconv.Itoa(config.Fommu.Port), r)

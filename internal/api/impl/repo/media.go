@@ -2,6 +2,7 @@ package repo
 
 import (
 	"app/internal/api/core/entity"
+	"app/internal/api/core/repo"
 	"app/internal/config"
 	"context"
 	"net/url"
@@ -15,7 +16,7 @@ type MediaRepoImpl struct {
     db *sqlx.DB
 }
 
-func NewMediaRepoImpl(db *sqlx.DB) *MediaRepoImpl {
+func NewMediaRepoImpl(db *sqlx.DB) repo.MediaRepo {
     return &MediaRepoImpl{
         db: db,
     }

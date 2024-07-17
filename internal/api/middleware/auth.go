@@ -10,7 +10,9 @@ import (
 	"strings"
 )
 
-func NewAuthMiddleware(auth *usecase.AuthUsecase) func(next http.Handler) http.Handler {
+type AuthMiddleware func(http.Handler) http.Handler
+
+func NewAuthMiddleware(auth *usecase.AuthUsecase) AuthMiddleware {
     return func(next http.Handler) http.Handler {
         return http.HandlerFunc(handler.Handle(
             func(w http.ResponseWriter, r *http.Request) error {
