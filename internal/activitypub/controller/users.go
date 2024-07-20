@@ -22,11 +22,13 @@ import (
 
 type APUsersController struct {
     getUser *usecase.GetUserUsecase
+    followUser *usecase.FollowUserUsecase
 }
 
-func NewAPUsersController(getUser *usecase.GetUserUsecase) *APUsersController {
+func NewAPUsersController(getUser *usecase.GetUserUsecase, followUser *usecase.FollowUserUsecase) *APUsersController {
     return &APUsersController{
         getUser: getUser,
+        followUser: followUser,
     }
 }
 
@@ -191,7 +193,8 @@ func (f *APUsersController) Inbox(w http.ResponseWriter, r *http.Request) error 
     }
 
     switch activity.Type {
-        case activitypub.FollowType: println("Follow")
+        case activitypub.FollowType: 
+            f.followUser.Exec(r.Context(), activity)
     }
 
     return nil

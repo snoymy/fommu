@@ -29,11 +29,13 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient
 
     // repo and adapter
     container.Register(repo.NewUserRepoImpl)
+    container.Register(repo.NewFollowingRepoImpl)
 
     // usecase
     container.Register(usecase.NewVerifySignatureUsecase)
     container.Register(usecase.NewGetUserUsecase)
     container.Register(usecase.NewFindResourceUsecase)
+    container.Register(usecase.NewFollowUserUsecase)
 
     // controller and middleware
     container.Register(middleware.NewVerifyMiddleware)

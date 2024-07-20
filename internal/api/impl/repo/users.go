@@ -58,7 +58,7 @@ func (r *UserRepository) FindUserByUsername(ctx context.Context, username string
             return user, nil
         }
 
-        if !user.UpdateAt.IsNull() && time.Now().UTC().Before(user.UpdateAt.ValueOrZero().Add(1 * time.Minute)) {
+        if !user.UpdateAt.IsNull() && time.Now().UTC().Before(user.UpdateAt.ValueOrZero().Add(15 * time.Minute)) {
             return user, nil
         }
 
@@ -98,37 +98,48 @@ func (r *UserRepository) FindUserByUsername(ctx context.Context, username string
         if user.Displayname != userTemp.Displayname {
             user.Displayname = userTemp.Displayname 
             hasUpdate = true
-        } else if user.Bio.ValueOrZero() != userTemp.Bio.ValueOrZero() {
+        } 
+        if user.Bio.ValueOrZero() != userTemp.Bio.ValueOrZero() {
             user.Bio = userTemp.Bio
             hasUpdate = true
-        } else if user.FollowersURL.ValueOrZero() != userTemp.FollowersURL.ValueOrZero() {
+        } 
+        if user.FollowersURL.ValueOrZero() != userTemp.FollowersURL.ValueOrZero() {
             user.FollowersURL = userTemp.FollowersURL
             hasUpdate = true
-        } else if user.FollowingURL.ValueOrZero() != userTemp.FollowingURL.ValueOrZero() {
+        } 
+        if user.FollowingURL.ValueOrZero() != userTemp.FollowingURL.ValueOrZero() {
             user.FollowingURL = userTemp.FollowingURL
             hasUpdate = true
-        } else if user.InboxURL.ValueOrZero() != userTemp.InboxURL.ValueOrZero(){
+        } 
+        if user.InboxURL.ValueOrZero() != userTemp.InboxURL.ValueOrZero(){
             user.InboxURL = userTemp.InboxURL
             hasUpdate = true
-        } else if user.OutboxURL.ValueOrZero() != userTemp.OutboxURL.ValueOrZero(){
+        } 
+        if user.OutboxURL.ValueOrZero() != userTemp.OutboxURL.ValueOrZero(){
             user.OutboxURL = userTemp.OutboxURL
             hasUpdate = true
-        } else if user.Avatar.ValueOrZero() != userTemp.Avatar.ValueOrZero(){
+        } 
+        if user.Avatar.ValueOrZero() != userTemp.Avatar.ValueOrZero(){
             user.Avatar = userTemp.Avatar
             hasUpdate = true
-        } else if user.Banner.ValueOrZero() != userTemp.Banner.ValueOrZero(){
+        } 
+        if user.Banner.ValueOrZero() != userTemp.Banner.ValueOrZero(){
             user.Banner = userTemp.Banner
             hasUpdate = true
-        } else if reflect.DeepEqual(user.Attachment.ValueOrZero(), userTemp.Attachment.ValueOrZero()) {
+        } 
+        if reflect.DeepEqual(user.Attachment.ValueOrZero(), userTemp.Attachment.ValueOrZero()) {
             user.Attachment = userTemp.Attachment
             hasUpdate = true
-        } else if reflect.DeepEqual(user.Tag.ValueOrZero(), userTemp.Tag.ValueOrZero()) {
+        } 
+        if reflect.DeepEqual(user.Tag.ValueOrZero(), userTemp.Tag.ValueOrZero()) {
             user.Tag = userTemp.Tag
             hasUpdate = true
-        } else if user.FollowerCount != userTemp.FollowerCount {
+        } 
+        if user.FollowerCount != userTemp.FollowerCount {
             user.FollowerCount = userTemp.FollowerCount
             hasUpdate = true
-        } else if user.FollowingCount != userTemp.FollowingCount {
+        } 
+        if user.FollowingCount != userTemp.FollowingCount {
             user.FollowingCount = userTemp.FollowingCount
             hasUpdate = true
         }
