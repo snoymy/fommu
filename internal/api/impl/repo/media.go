@@ -13,13 +13,11 @@ import (
 )
 
 type MediaRepoImpl struct {
-    db *sqlx.DB
+    db *sqlx.DB `injectable:""`
 }
 
-func NewMediaRepoImpl(db *sqlx.DB) repo.MediaRepo {
-    return &MediaRepoImpl{
-        db: db,
-    }
+func NewMediaRepoImpl() repo.MediaRepo {
+    return &MediaRepoImpl{}
 }
 
 func (r *MediaRepoImpl) CreateMedia(ctx context.Context, media *entity.MediaEntity) error {

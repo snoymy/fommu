@@ -18,15 +18,12 @@ import (
 )
 
 type SigninUsecase struct {
-    userRepo repo.UsersRepo
-    sessionRepo repo.SessionsRepo
+    userRepo    repo.UsersRepo    `injectable:""`
+    sessionRepo repo.SessionsRepo `injectable:""`
 }
 
-func NewSigninUsecase(userRepo repo.UsersRepo, sessionRepo repo.SessionsRepo) *SigninUsecase {
-    return &SigninUsecase{
-        userRepo: userRepo,
-        sessionRepo: sessionRepo,
-    }
+func NewSigninUsecase() *SigninUsecase {
+    return &SigninUsecase{}
 }
 
 func (uc *SigninUsecase) Exec(ctx context.Context, email string, password string, clientData types.JsonObject) (*entity.SessionEntity, error) {

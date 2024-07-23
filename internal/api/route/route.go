@@ -8,7 +8,7 @@ import (
 	"app/internal/handler"
 	"app/internal/httpclient"
 	"app/internal/log"
-	"app/lib/di"
+	"app/lib/di/structdi"
 	"context"
 
 	"github.com/go-chi/chi/v5"
@@ -21,7 +21,7 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 
-    container := di.New()
+    container := structdi.New()
 
     container.Register(func() chi.Router { return r })
     container.Register(func() *sqlx.DB { return db })

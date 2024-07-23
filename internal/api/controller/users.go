@@ -14,27 +14,15 @@ import (
 )
 
 type UsersController struct {
-    signup *usecase.SignupUsecase
-    getUser *usecase.GetUserUsecase
-    editProfile *usecase.EditProfileUsecase
-    editAccount *usecase.EditAccountUsecase
-    searchUser *usecase.SearchUserUsecase
+    signup      *usecase.SignupUsecase      `injectable:""`
+    getUser     *usecase.GetUserUsecase     `injectable:""`
+    editProfile *usecase.EditProfileUsecase `injectable:""`
+    editAccount *usecase.EditAccountUsecase `injectable:""`
+    searchUser  *usecase.SearchUserUsecase  `injectable:""`
 }
 
-func NewUsersController(
-    signup *usecase.SignupUsecase, 
-    getUser *usecase.GetUserUsecase, 
-    editProfile *usecase.EditProfileUsecase,
-    editAccount *usecase.EditAccountUsecase,
-    searchUser *usecase.SearchUserUsecase,
-) *UsersController {
-    return &UsersController{
-        signup: signup,
-        getUser: getUser,
-        editProfile: editProfile,
-        editAccount: editAccount,
-        searchUser: searchUser,
-    }
+func NewUsersController() *UsersController {
+    return &UsersController{}
 }
 
 func (c *UsersController) SignUp(w http.ResponseWriter, r *http.Request) error {

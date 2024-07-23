@@ -21,13 +21,11 @@ import (
 )
 
 type SignupUsecase struct {
-    userRepository repo.UsersRepo
+    userRepository repo.UsersRepo `injectable:""`
 }
 
-func NewSignupUsecase(userRepository repo.UsersRepo) *SignupUsecase {
-    return &SignupUsecase{
-        userRepository: userRepository,
-    }
+func NewSignupUsecase() *SignupUsecase {
+    return &SignupUsecase{}
 }
 
 func (uc *SignupUsecase) Exec(ctx context.Context, email string, username string, password string) error {

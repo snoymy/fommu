@@ -14,13 +14,11 @@ import (
 )
 
 type UploadFileUsecase struct {
-    mediaRepo repo.MediaRepo
+    mediaRepo repo.MediaRepo `injectable:""`
 }
 
-func NewUploadFileUsecase(mediaRepo repo.MediaRepo) *UploadFileUsecase {
-    return &UploadFileUsecase{
-        mediaRepo: mediaRepo,
-    }
+func NewUploadFileUsecase() *UploadFileUsecase {
+    return &UploadFileUsecase{}
 }
 
 func (uc *UploadFileUsecase) Exec(ctx context.Context, fileBytes []byte, originalFileName string, fileSize int64, mimeType string, uploader string) (*entity.MediaEntity, error) {

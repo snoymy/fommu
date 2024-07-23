@@ -8,13 +8,11 @@ import (
 )
 
 type RevokeSessionUsecase struct {
-    sessionRepo repo.SessionsRepo
+    sessionRepo repo.SessionsRepo `injectable:""`
 }
 
-func NewRevokeSessionUsecase(sessionRepo repo.SessionsRepo) *RevokeSessionUsecase {
-    return &RevokeSessionUsecase{
-        sessionRepo: sessionRepo,
-    }
+func NewRevokeSessionUsecase() *RevokeSessionUsecase {
+    return &RevokeSessionUsecase{}
 }
 
 func (uc *RevokeSessionUsecase) Exec(ctx context.Context, currentSessionId string, sessionId string) error {

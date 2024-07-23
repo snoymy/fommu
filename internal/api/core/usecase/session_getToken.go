@@ -10,13 +10,11 @@ import (
 )
 
 type GetTokenUsecase struct {
-    sessionRepo repo.SessionsRepo
+    sessionRepo repo.SessionsRepo `injectable:""`
 }
 
-func NewGetTokenUsecase(sessionRepo repo.SessionsRepo) *GetTokenUsecase {
-    return &GetTokenUsecase{
-        sessionRepo: sessionRepo,
-    }
+func NewGetTokenUsecase() *GetTokenUsecase {
+    return &GetTokenUsecase{}
 }
 
 func (uc *GetTokenUsecase) Exec(ctx context.Context, sessionId string) (*entity.SessionEntity, error) {

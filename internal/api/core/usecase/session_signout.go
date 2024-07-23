@@ -8,13 +8,11 @@ import (
 )
 
 type SignOutUsecase struct {
-    sessionRepo repo.SessionsRepo
+    sessionRepo repo.SessionsRepo `injectable:""`
 }
 
-func NewSignOutUsecase(sessionRepo repo.SessionsRepo) *SignOutUsecase{
-    return &SignOutUsecase{
-        sessionRepo: sessionRepo,
-    }
+func NewSignOutUsecase() *SignOutUsecase{
+    return &SignOutUsecase{}
 }
 
 func (uc *SignOutUsecase) Exec(ctx context.Context, sessionId string) error {

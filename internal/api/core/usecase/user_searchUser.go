@@ -11,13 +11,11 @@ import (
 )
 
 type SearchUserUsecase struct {
-    userRepo repo.UsersRepo
+    userRepo repo.UsersRepo `injectable:""`
 }
 
-func NewSearchUserUsecase(userRepo repo.UsersRepo) *SearchUserUsecase {
-    return &SearchUserUsecase{
-        userRepo: userRepo,
-    }
+func NewSearchUserUsecase() *SearchUserUsecase {
+    return &SearchUserUsecase{}
 }
 
 func (uc *SearchUserUsecase) Exec(ctx context.Context, username string) ([]*entity.UserEntity, error) {

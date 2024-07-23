@@ -14,13 +14,11 @@ import (
 )
 
 type EditAccountUsecase struct {
-    userRepo repo.UsersRepo
+    userRepo repo.UsersRepo `injectable:""`
 }
 
-func NewEditAccountUsecase(userRepo repo.UsersRepo) *EditAccountUsecase {
-    return &EditAccountUsecase{
-        userRepo: userRepo,
-    }
+func NewEditAccountUsecase() *EditAccountUsecase {
+    return &EditAccountUsecase{}
 }
 
 func (uc *EditAccountUsecase) Exec(ctx context.Context, username string, account dto.UserAccountDTO) error {

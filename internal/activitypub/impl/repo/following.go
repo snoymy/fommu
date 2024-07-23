@@ -9,13 +9,11 @@ import (
 )
 
 type FollowingRepoImpl struct {
-    db *sqlx.DB
+    db *sqlx.DB `injectable:""`
 }
 
-func NewFollowingRepoImpl(db *sqlx.DB) repo.FollowingRepo {
-    return &FollowingRepoImpl{
-        db: db,
-    }
+func NewFollowingRepoImpl() repo.FollowingRepo {
+    return &FollowingRepoImpl{}
 }
 
 func (r *FollowingRepoImpl) CreateFollowing(ctx context.Context, following *entity.FollowingEntity) error {

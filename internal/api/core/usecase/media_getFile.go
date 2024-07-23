@@ -11,13 +11,11 @@ import (
 )
 
 type GetFileUsecase struct {
-    mediaRepo repo.MediaRepo
+    mediaRepo repo.MediaRepo `injectable:""`
 }
 
-func NewGetFileUsecase(mediaRepo repo.MediaRepo) *GetFileUsecase {
-    return &GetFileUsecase{
-        mediaRepo: mediaRepo,
-    }
+func NewGetFileUsecase() *GetFileUsecase {
+    return &GetFileUsecase{}
 }
 
 func (uc *GetFileUsecase) Exec(ctx context.Context, fileName string) ([]byte, *entity.MediaEntity, error) {

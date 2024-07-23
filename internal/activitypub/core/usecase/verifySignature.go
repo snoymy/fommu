@@ -18,13 +18,11 @@ import (
 )
 
 type VerifySignatureUsecase struct {
-	userRepo repo.UsersRepo
+	userRepo repo.UsersRepo `injectable:""`
 }
 
-func NewVerifySignatureUsecase(userRepo repo.UsersRepo) *VerifySignatureUsecase {
-	return &VerifySignatureUsecase{
-		userRepo: userRepo,
-	}
+func NewVerifySignatureUsecase() *VerifySignatureUsecase {
+	return &VerifySignatureUsecase{}
 }
 
 // VerifySignature verifies the signature of the request.

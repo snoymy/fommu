@@ -9,13 +9,11 @@ import (
 )
 
 type SessionsRepoImpl struct {
-    db *sqlx.DB
+    db *sqlx.DB `injectable:""`
 }
 
-func NewSessionRepoImpl(db *sqlx.DB) repo.SessionsRepo {
-    return &SessionsRepoImpl{
-        db: db,
-    }
+func NewSessionRepoImpl() repo.SessionsRepo {
+    return &SessionsRepoImpl{}
 }
 
 func (r *SessionsRepoImpl) CreateSession(ctx context.Context, session *entity.SessionEntity) error {

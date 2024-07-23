@@ -14,30 +14,16 @@ import (
 )
 
 type SessionsController struct {
-    signin *usecase.SigninUsecase
-    signout *usecase.SignOutUsecase
-    refreshToken *usecase.RefreshTokenUsecase
-    getToken *usecase.GetTokenUsecase
-    revokeSession *usecase.RevokeSessionUsecase
-    verifySession *usecase.GetIdentityUsecase
+    signin        *usecase.SigninUsecase        `injectable:""`
+    signout       *usecase.SignOutUsecase       `injectable:""`
+    refreshToken  *usecase.RefreshTokenUsecase  `injectable:""`
+    getToken      *usecase.GetTokenUsecase      `injectable:""`
+    revokeSession *usecase.RevokeSessionUsecase `injectable:""`
+    verifySession *usecase.GetIdentityUsecase   `injectable:""`
 }
 
-func NewSessionsController(
-    signin *usecase.SigninUsecase, 
-    signout *usecase.SignOutUsecase,
-    refreshToken *usecase.RefreshTokenUsecase,
-    getToken *usecase.GetTokenUsecase,
-    revokeSession *usecase.RevokeSessionUsecase,
-    verifySession *usecase.GetIdentityUsecase,
-) *SessionsController {
-    return &SessionsController{
-        signin: signin,
-        signout: signout,
-        refreshToken: refreshToken,
-        getToken: getToken,
-        revokeSession: revokeSession,
-        verifySession: verifySession,
-    }
+func NewSessionsController() *SessionsController {
+    return &SessionsController{}
 }
 
 func (c *SessionsController) Signin(w http.ResponseWriter, r *http.Request) error {

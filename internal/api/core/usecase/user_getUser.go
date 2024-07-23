@@ -12,13 +12,11 @@ import (
 )
 
 type GetUserUsecase struct {
-    userRepo repo.UsersRepo
+    userRepo repo.UsersRepo `injectable:""`
 }
 
-func NewGetUserUsecase(userRepo repo.UsersRepo) *GetUserUsecase {
-    return &GetUserUsecase{
-        userRepo: userRepo,
-    }
+func NewGetUserUsecase() *GetUserUsecase {
+    return &GetUserUsecase{}
 }
 
 func (uc *GetUserUsecase) Exec(ctx context.Context, username string) (*entity.UserEntity, error) {

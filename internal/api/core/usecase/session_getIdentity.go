@@ -9,15 +9,12 @@ import (
 )
 
 type GetIdentityUsecase struct {
-    sessionRepo repo.SessionsRepo
-    userRepo repo.UsersRepo
+    sessionRepo repo.SessionsRepo `injectable:""`
+    userRepo    repo.UsersRepo    `injectable:""`
 }
 
-func NewGetIdentityUsecase(sessionRepo repo.SessionsRepo, userRepo repo.UsersRepo) *GetIdentityUsecase {
-    return &GetIdentityUsecase{
-        sessionRepo: sessionRepo,
-        userRepo: userRepo,
-    }
+func NewGetIdentityUsecase() *GetIdentityUsecase {
+    return &GetIdentityUsecase{}
 }
 
 func (uc *GetIdentityUsecase) Exec(ctx context.Context, sessionId string) (*entity.UserEntity, error) {

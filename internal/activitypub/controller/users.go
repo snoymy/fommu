@@ -21,15 +21,12 @@ import (
 )
 
 type APUsersController struct {
-    getUser *usecase.GetUserUsecase
-    followUser *usecase.FollowUserUsecase
+    getUser    *usecase.GetUserUsecase    `injectable:""`
+    followUser *usecase.FollowUserUsecase `injectable:""`
 }
 
-func NewAPUsersController(getUser *usecase.GetUserUsecase, followUser *usecase.FollowUserUsecase) *APUsersController {
-    return &APUsersController{
-        getUser: getUser,
-        followUser: followUser,
-    }
+func NewAPUsersController() *APUsersController {
+    return &APUsersController{}
 }
 
 func (f *APUsersController) GetUser(w http.ResponseWriter, r *http.Request) error {

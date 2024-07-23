@@ -13,13 +13,11 @@ import (
 )
 
 type EditProfileUsecase struct {
-    userRepo repo.UsersRepo
+    userRepo repo.UsersRepo `injectable:""`
 }
 
-func NewEditProfileUsecase(userRepo repo.UsersRepo) *EditProfileUsecase {
-    return &EditProfileUsecase{
-        userRepo: userRepo,
-    }
+func NewEditProfileUsecase() *EditProfileUsecase {
+    return &EditProfileUsecase{}
 }
 
 func (uc *EditProfileUsecase) Exec(ctx context.Context, username string, profile dto.UserProfileDTO) error {

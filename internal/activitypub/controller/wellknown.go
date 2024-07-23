@@ -11,13 +11,11 @@ import (
 )
 
 type WellKnown struct {
-   findresource *usecase.FindResourceUsecase 
+   findresource *usecase.FindResourceUsecase `injectable:""`
 }
 
-func NewWellKnownController(findactor *usecase.FindResourceUsecase) *WellKnown {
-    return &WellKnown{
-        findresource: findactor,
-    }
+func NewWellKnownController() *WellKnown {
+    return &WellKnown{}
 }
 
 func (f *WellKnown) WebFinger(w http.ResponseWriter, r *http.Request) error {

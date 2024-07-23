@@ -11,13 +11,11 @@ import (
 
 
 type AuthUsecase struct {
-    sessionRepo repo.SessionsRepo
+    sessionRepo repo.SessionsRepo `injectable:""`
 }
 
-func NewAuthUsecase(sessionRepo repo.SessionsRepo) *AuthUsecase {
-    return &AuthUsecase{
-        sessionRepo: sessionRepo,
-    }
+func NewAuthUsecase() *AuthUsecase {
+    return &AuthUsecase{}
 }
 
 func (uc *AuthUsecase) Exec(ctx context.Context, sessionId string, accessToken string) (*entity.SessionEntity, error) {

@@ -12,15 +12,12 @@ import (
 )
 
 type MediaController struct {
-    uploadFileUsecase *usecase.UploadFileUsecase
-    getFileUsecase *usecase.GetFileUsecase
+    uploadFileUsecase *usecase.UploadFileUsecase `injectable:""`
+    getFileUsecase    *usecase.GetFileUsecase    `injectable:""`
 }
 
-func NewMediaController(uploadFileUsecase *usecase.UploadFileUsecase, getFileUsecase *usecase.GetFileUsecase) *MediaController {
-    return &MediaController{
-        uploadFileUsecase: uploadFileUsecase,
-        getFileUsecase: getFileUsecase,
-    }
+func NewMediaController() *MediaController {
+    return &MediaController{}
 }
 
 func (c *MediaController) UploadFile(w http.ResponseWriter, r *http.Request) error {

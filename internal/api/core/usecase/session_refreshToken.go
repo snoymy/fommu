@@ -11,13 +11,11 @@ import (
 )
 
 type RefreshTokenUsecase struct {
-    sessionRepo repo.SessionsRepo
+    sessionRepo repo.SessionsRepo `injectable:""`
 }
 
-func NewRefreshTokenUsecase(sessionRepo repo.SessionsRepo) *RefreshTokenUsecase {
-    return &RefreshTokenUsecase{
-        sessionRepo: sessionRepo,
-    }
+func NewRefreshTokenUsecase() *RefreshTokenUsecase {
+    return &RefreshTokenUsecase{}
 }
 
 func (uc *RefreshTokenUsecase) Exec(ctx context.Context, sessionId string, refreshToken string) (*entity.SessionEntity, error) {

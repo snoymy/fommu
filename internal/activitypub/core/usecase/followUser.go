@@ -16,15 +16,12 @@ import (
 )
 
 type FollowUserUsecase struct {
-    userRepo repo.UsersRepo
-    followingRepo repo.FollowingRepo
+    userRepo      repo.UsersRepo     `injectable:""`
+    followingRepo repo.FollowingRepo `injectable:""`
 }
 
-func NewFollowUserUsecase(userRepo repo.UsersRepo, followingRepo repo.FollowingRepo) *FollowUserUsecase {
-    return &FollowUserUsecase{
-        userRepo: userRepo,
-        followingRepo: followingRepo,
-    }
+func NewFollowUserUsecase() *FollowUserUsecase {
+    return &FollowUserUsecase{}
 }
 
 func (uc *FollowUserUsecase) Exec(ctx context.Context, activity *activitypub.Activity) error {

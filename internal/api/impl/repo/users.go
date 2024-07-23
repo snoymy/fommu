@@ -20,15 +20,12 @@ import (
 )
 
 type UserRepository struct {
-    db *sqlx.DB
-    apClient *httpclient.ActivitypubClient
+    db       *sqlx.DB                      `injectable:""`
+    apClient *httpclient.ActivitypubClient `injectable:""`
 }
 
-func NewUserRepoImpl(db *sqlx.DB, apClient *httpclient.ActivitypubClient) repo.UsersRepo {
-    return &UserRepository{
-        db: db,
-        apClient: apClient,
-    }
+func NewUserRepoImpl() repo.UsersRepo {
+    return &UserRepository{}
 }
 
 func (r *UserRepository) FindUserByID(ctx context.Context, id string) (*entity.UserEntity, error) {
