@@ -1,12 +1,12 @@
 package main
 
 import (
-	aproute "app/internal/activitypub/route"
-	apiroute "app/internal/api/route"
+	aproute "app/internal/adapter/activitypub/route"
+	apiroute "app/internal/adapter/fommu/route"
 	"app/internal/config"
-	"app/internal/config/database"
-	"app/internal/handler"
-	"app/internal/httpclient"
+	"app/internal/adapter/database"
+	"app/internal/adapter/handler"
+	"app/internal/adapter/httpclient"
 	"app/internal/log"
 	"context"
 	"net/http"

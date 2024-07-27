@@ -20,7 +20,6 @@ func Linkify(inputText string) string {
 			linkedText += part
 		} else {
 			// Otherwise, replace URLs with <a> tags
-            fmt.Println(urlPattern.FindAll([]byte(part), 0))
 			linkedText += urlPattern.ReplaceAllStringFunc(part, func(url string) string {
 				// Add the protocol if it's missing (for URLs starting with www)
 				if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {

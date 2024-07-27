@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	_ "fmt"
 	"os"
 	"strconv"
 
