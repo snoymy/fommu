@@ -57,9 +57,18 @@ func (c *UsersController) LookUp(w http.ResponseWriter, r *http.Request) error {
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 
-    username := r.URL.Query().Get("acct")
+    acct := r.URL.Query().Get("acct")
+    log.Info(ctx, "Spliting username and domain.")
+    s := strings.SplitN(acct, "@", 2)
+
+    username := strings.TrimSpace(s[0])
+    domain := ""
+    if len(s) > 1 {
+        log.Debug(ctx, "Has domain name.")
+        domain = strings.TrimSpace(s[1])
+    }
     
-    user, err := c.getUser.Exec(ctx, username)
+    user, err := c.getUser.Exec(ctx, username, domain)
 
     if err != nil {
         log.Info(ctx, "Response with error: " + err.Error())
@@ -81,9 +90,19 @@ func (c *UsersController) Search(w http.ResponseWriter, r *http.Request) error {
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 
-    username := r.URL.Query().Get("acct")
+    acct := r.URL.Query().Get("acct")
+
+    log.Info(ctx, "Spliting username and domain.")
+    s := strings.SplitN(acct, "@", 2)
+
+    username := strings.TrimSpace(s[0])
+    domain := ""
+    if len(s) > 1 {
+        log.Debug(ctx, "Has domain name.")
+        domain = strings.TrimSpace(s[1])
+    }
     
-    users, err := c.searchUser.Exec(ctx, username)
+    users, err := c.searchUser.Exec(ctx, username, domain)
 
     if err != nil {
         log.Info(ctx, "Response with error: " + err.Error())
@@ -137,7 +156,17 @@ func (c *UsersController) GetUser(w http.ResponseWriter, r *http.Request) error 
     username = strings.ReplaceAll(username, "%40", "@")
     username = strings.ReplaceAll(username, "%3A", ":")
 
-    user, err := c.getUser.Exec(ctx, username)
+    log.Info(ctx, "Spliting username and domain.")
+    s := strings.SplitN(username, "@", 2)
+
+    username = strings.TrimSpace(s[0])
+    domain := ""
+    if len(s) > 1 {
+        log.Debug(ctx, "Has domain name.")
+        domain = strings.TrimSpace(s[1])
+    }
+
+    user, err := c.getUser.Exec(ctx, username, domain)
 
     if err != nil {
         log.Info(ctx, "Response with error: " + err.Error())

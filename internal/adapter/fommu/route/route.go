@@ -7,9 +7,9 @@ import (
 	"app/internal/application/fommu/usecase"
 	"app/internal/adapter/handler"
 	"app/internal/adapter/httpclient"
-	"app/internal/adapter/repoImpl"
+	"app/internal/adapter/repoimpl"
 	"app/internal/log"
-	"app/lib/di/structdi"
+	"app/lib/di"
 	"context"
 
 	"github.com/go-chi/chi/v5"
@@ -28,9 +28,9 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient
     container.Register(func() *sqlx.DB { return db })
     container.Register(func() *httpclient.ActivitypubClient { return apClient })
     // repo and adapter
-    container.Register(func() repo.UsersRepo { return repoImpl.NewUserRepoImpl() })
-    container.Register(func() repo.SessionsRepo { return repoImpl.NewSessionRepoImpl() })
-    container.Register(func() repo.MediaRepo { return repoImpl.NewMediaRepoImpl() })
+    container.Register(func() repo.UsersRepo { return repoimpl.NewUserRepoImpl() })
+    container.Register(func() repo.SessionsRepo { return repoimpl.NewSessionRepoImpl() })
+    container.Register(func() repo.MediaRepo { return repoimpl.NewMediaRepoImpl() })
 
     // usecase
     container.Register(usecase.NewAuthUsecase)

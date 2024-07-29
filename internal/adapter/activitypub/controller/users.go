@@ -1,18 +1,15 @@
 package controller
 
 import (
+	"app/internal/adapter/mapper"
 	"app/internal/application/activitypub/usecase"
 	"app/internal/core/appstatus"
-	"app/internal/config"
 	"app/internal/log"
-	"app/internal/utils"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
-	"path/filepath"
 	"strings"
 
 	"github.com/go-ap/jsonld"
@@ -51,90 +48,16 @@ func (f *APUsersController) GetUser(w http.ResponseWriter, r *http.Request) erro
         return err
     }
 
-    if user == nil {
-        log.Info(ctx, "User not found")
-        return appstatus.NotFound()
-    }
-
-    log.Info(ctx, "Build user url")
-    userURL, err := url.JoinPath(config.Fommu.URL, "users", user.Username)
+    person, err := mapper.UserToPerson(user)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())
         return appstatus.InternalServerError("Something went wrong.")
-    }
-    inboxURL, err := url.JoinPath(userURL, "inbox")
-    if err != nil {
-        log.Error(ctx, "Error: " + err.Error())
-        return appstatus.InternalServerError("Something went wrong.")
-    }
-    outbox, err := url.JoinPath(userURL, "outbox")
-    if err != nil {
-        log.Error(ctx, "Error: " + err.Error())
-        return appstatus.InternalServerError("Something went wrong.")
-    }
-    followersURL, err := url.JoinPath(userURL, "followers")
-    if err != nil {
-        log.Error(ctx, "Error: " + err.Error())
-        return appstatus.InternalServerError("Something went wrong.")
-    }
-    followingURL, err := url.JoinPath(userURL, "following")
-    if err != nil {
-        log.Error(ctx, "Error: " + err.Error())
-        return appstatus.InternalServerError("Something went wrong.")
-    }
-
-    log.Info(ctx, "Create ActivityPub Person")
-    p := activitypub.PersonNew(activitypub.IRI(userURL))
-
-    p.Name = activitypub.NaturalLanguageValuesNew(activitypub.LangRefValueNew(activitypub.DefaultLang, user.Displayname))
-    p.PreferredUsername = activitypub.NaturalLanguageValuesNew(activitypub.LangRefValueNew(activitypub.DefaultLang, user.Username))
-    p.Inbox = activitypub.IRI(inboxURL)
-    p.Outbox = activitypub.IRI(outbox)
-    p.Followers = activitypub.IRI(followersURL)
-    p.Following = activitypub.IRI(followingURL)
-    p.PublicKey = activitypub.PublicKey{
-        ID: activitypub.IRI(userURL + "#main-key"),
-        Owner: activitypub.IRI(userURL),
-        PublicKeyPem: user.PublicKey,
-    }
-    p.Summary = activitypub.NaturalLanguageValuesNew(activitypub.LangRefValueNew(
-        activitypub.DefaultLang, 
-        strings.ReplaceAll(strings.ReplaceAll(utils.Linkify(user.Bio.ValueOrZero()), "\n", "<br>"), " ", "&nbsp;"),
-    ))
-    p.URL = activitypub.IRI(userURL)
-    p.Icon = activitypub.Image{
-        Type: activitypub.ImageType,
-        MediaType: activitypub.MimeType(utils.GetMIMEFromExtension(filepath.Ext(user.Avatar.ValueOrZero()))),
-        URL: activitypub.IRI(user.Avatar.ValueOrZero()),
-    }
-    p.Image = activitypub.Image{
-        Type: activitypub.ImageType,
-        MediaType: activitypub.MimeType(utils.GetMIMEFromExtension(filepath.Ext(user.Banner.ValueOrZero()))),
-        URL: activitypub.IRI(user.Banner.ValueOrZero()),
-    }
-    p.Attachment = activitypub.ItemCollection{}
-    for _, item := range user.Attachment.ValueOrZero() {
-        attachment, err := utils.MapToStruct[activitypub.Object](item.(map[string]interface{}))
-        if err != nil {
-            log.Error(ctx, "Error: " + err.Error())
-            return appstatus.InternalServerError("Something went wrong.")
-        }
-        p.Attachment.Append(attachment)
-    }
-    p.Tag = activitypub.ItemCollection{}
-    for _, item := range user.Tag.ValueOrZero() {
-        tag, err := utils.MapToStruct[activitypub.Object](item.(map[string]interface{}))
-        if err != nil {
-            log.Error(ctx, "Error: " + err.Error())
-            return appstatus.InternalServerError("Something went wrong.")
-        }
-        p.Tag.Append(tag)
     }
 
     log.Info(ctx, "Build JSON-LD")
     bytes, err := jsonld.WithContext(
         jsonld.IRI(activitypub.ActivityBaseURI),
-    ).Marshal(p)
+    ).Marshal(person)
 
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())

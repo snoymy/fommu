@@ -3,13 +3,13 @@ package route
 import (
 	"app/internal/adapter/activitypub/controller"
 	"app/internal/application/activitypub/usecase"
-	"app/internal/adapter/repoImpl"
+	"app/internal/adapter/repoimpl"
 	"app/internal/application/activitypub/repo"
 	"app/internal/adapter/activitypub/middleware"
 	"app/internal/adapter/handler"
 	"app/internal/adapter/httpclient"
 	"app/internal/log"
-	"app/lib/di/structdi"
+	"app/lib/di"
 	"context"
 
 	"github.com/go-chi/chi/v5"
@@ -29,8 +29,8 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient
     container.Register(func() *httpclient.ActivitypubClient { return apClient })
 
     // repo and adapter
-    container.Register(func() repo.UsersRepo { return repoImpl.NewUserRepoImpl() })
-    container.Register(func() repo.FollowingRepo { return repoImpl.NewFollowingRepoImpl() })
+    container.Register(func() repo.UsersRepo { return repoimpl.NewUserRepoImpl() })
+    container.Register(func() repo.FollowingRepo { return repoimpl.NewFollowingRepoImpl() })
 
     // usecase
     container.Register(usecase.NewVerifySignatureUsecase)

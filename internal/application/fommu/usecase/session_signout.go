@@ -25,6 +25,20 @@ func (uc *SignOutUsecase) Exec(ctx context.Context, sessionId string) error {
     }
 
     log.Info(ctx, "Check if session exist")
+    if err := uc.checkSession(ctx, sessionId); err != nil {
+        return err
+    }
+
+    log.Info(ctx, "Delete session")
+    if err := uc.sessionRepo.DeleteSession(ctx, sessionId); err != nil {
+        log.Error(ctx, "Error: " + err.Error())
+        return err
+    }
+
+    return nil
+}
+
+func (uc *SignOutUsecase) checkSession(ctx context.Context, sessionId string) error {
     session, err := uc.sessionRepo.FindSessionByID(ctx, sessionId)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())
@@ -34,12 +48,6 @@ func (uc *SignOutUsecase) Exec(ctx context.Context, sessionId string) error {
     if session == nil {
         log.Info(ctx, "Session not found")
         return appstatus.BadValue("Session not found.")
-    }
-
-    log.Info(ctx, "Delete session")
-    if err := uc.sessionRepo.DeleteSession(ctx, sessionId); err != nil {
-        log.Error(ctx, "Error: " + err.Error())
-        return err
     }
 
     return nil

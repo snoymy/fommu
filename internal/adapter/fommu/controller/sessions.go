@@ -3,9 +3,9 @@ package controller
 import (
 	"app/internal/application/fommu/usecase"
 	"app/internal/core/appstatus"
-	"app/internal/log"
 	"app/internal/core/types"
-	"app/internal/utils"
+	"app/internal/log"
+	"app/internal/utils/requestutil"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -40,7 +40,7 @@ func (c *SessionsController) Signin(w http.ResponseWriter, r *http.Request) erro
     email, _ := body["email"].(string)
     password, _ := body["password"].(string)
 
-    device, os := utils.GetClientPlatform(r)
+    device, os := requestutil.GetClientPlatform(r)
     clientData := types.JsonObject{
         "os": os,
         "device": device,

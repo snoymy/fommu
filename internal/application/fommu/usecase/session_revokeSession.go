@@ -3,6 +3,7 @@ package usecase
 import (
 	"app/internal/application/fommu/repo"
 	"app/internal/core/appstatus"
+	"app/internal/core/entity"
 	"app/internal/log"
 	"context"
 )
@@ -30,31 +31,19 @@ func (uc *RevokeSessionUsecase) Exec(ctx context.Context, currentSessionId strin
     }
 
     log.Info(ctx, "Check if session is exist")
-    currentSession, err := uc.sessionRepo.FindSessionByID(ctx, currentSessionId)
+    currentSession, err := uc.getSession(ctx, currentSessionId)
     if err != nil {
-        log.Error(ctx, "Error: " + err.Error())
-        return appstatus.InternalServerError("Something went wrong")
-    }
-
-    if currentSession == nil {
-        log.Info(ctx, "Session not found")
-        return appstatus.InvalidSession("Session not found.")
+        return err
     }
 
     log.Info(ctx, "Check if target session is exist")
-    session, err := uc.sessionRepo.FindSessionByID(ctx, sessionId)
+    session, err := uc.getSession(ctx, sessionId)
     if err != nil {
-        log.Error(ctx, "Error: " + err.Error())
-        return appstatus.InternalServerError("Something went wrong")
-    }
-
-    if session == nil {
-        log.Info(ctx, "Target session not found")
-        return appstatus.BadValue("Session not found.")
+        return err
     }
 
     log.Info(ctx, "Check session owner")
-    if currentSession.Owner != session.Owner {
+    if uc.isSessionOwner(currentSession, session) {
         log.Info(ctx, "target session not found")
         return appstatus.BadValue("You are not session owner.")
     }
@@ -66,4 +55,27 @@ func (uc *RevokeSessionUsecase) Exec(ctx context.Context, currentSessionId strin
     }
 
     return nil
+}
+
+func (uc *RevokeSessionUsecase) getSession(ctx context.Context, sessionId string) (*entity.SessionEntity, error) {
+    session, err := uc.sessionRepo.FindSessionByID(ctx, sessionId)
+    if err != nil {
+        log.Error(ctx, "Error: " + err.Error())
+        return nil, appstatus.InternalServerError("Something went wrong")
+    }
+
+    if session == nil {
+        log.Info(ctx, "Session not found")
+        return nil, appstatus.InvalidSession("Session not found.")
+    }
+
+    return session, nil
+}
+
+func (uc *RevokeSessionUsecase) isSessionOwner(ownerSession *entity.SessionEntity, targetSession *entity.SessionEntity) bool {
+    if ownerSession.Owner == targetSession.Owner {
+        return true
+    }
+
+    return false
 }

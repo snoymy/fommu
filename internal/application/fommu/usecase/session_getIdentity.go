@@ -26,7 +26,22 @@ func (uc *GetIdentityUsecase) Exec(ctx context.Context, sessionId string) (*enti
         return nil, nil
     }
 
-    log.Info(ctx, "Check if session is exist")
+    log.Info(ctx, "Get session")
+    session, err := uc.getSession(ctx, sessionId)
+    if err != nil {
+        return nil, err
+    }
+
+    log.Info(ctx, "Get session owner")
+    user, err := uc.getSessionOwner(ctx, session.Owner)
+    if err != nil {
+        return nil, err
+    }
+
+    return user, nil
+}
+
+func (uc *GetIdentityUsecase) getSession(ctx context.Context, sessionId string) (*entity.SessionEntity, error) {
     session, err := uc.sessionRepo.FindSessionByID(ctx, sessionId)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())
@@ -38,8 +53,11 @@ func (uc *GetIdentityUsecase) Exec(ctx context.Context, sessionId string) (*enti
         return nil, appstatus.InvalidSession("Session not found.")
     }
 
-    log.Info(ctx, "Get session owner")
-    user, err := uc.userRepo.FindUserByID(ctx, session.Owner)
+    return session, nil
+}
+
+func (uc *GetIdentityUsecase) getSessionOwner(ctx context.Context, ownerId string) (*entity.UserEntity, error) {
+    user, err := uc.userRepo.FindUserByID(ctx, ownerId)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())
         return nil, appstatus.InternalServerError("Something went wrong")
@@ -47,9 +65,8 @@ func (uc *GetIdentityUsecase) Exec(ctx context.Context, sessionId string) (*enti
 
     if user == nil {
         log.Info(ctx, "User not found")
-        return nil, nil
+        return nil, appstatus.NotFound("User not found")
     }
 
     return user, nil
 }
-

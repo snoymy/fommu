@@ -6,10 +6,11 @@ import (
 	"app/internal/application/fommu/validator"
 	"app/internal/config"
 	"app/internal/core/appstatus"
+	"app/internal/core/entity"
 	"app/internal/log"
+	"app/internal/utils/passwordutil"
 	"context"
-	"crypto/sha256"
-	"encoding/base64"
+	"errors"
 	"time"
 )
 
@@ -32,89 +33,26 @@ func (uc *EditAccountUsecase) Exec(ctx context.Context, username string, account
         return appstatus.BadValue("username is empty.")
     }
 
-    log.Info(ctx, "Check if user is exist")
-    user, err := uc.userRepo.FindUserByUsername(ctx, username, config.Fommu.Domain)
+    log.Info(ctx, "Get user")
+    user, err := uc.getUser(ctx, username)
     if err != nil {
-        log.Error(ctx, "Error: " + err.Error())
-        return appstatus.InternalServerError("Something went wrong")
-    }
-    if user == nil {
-        log.Info(ctx, "User not found")
-        return appstatus.NotFound("user not found.")
+        return err
     }
 
     if account.Email != nil {
         log.Info(ctx, "Update email")
         email := account.Email.ValueOrZero()
-        if email != user.Email.ValueOrZero() {
-            if account.CurrentPassword == nil {
-                log.Warn(ctx, "Password is empty")
-                return appstatus.InvalidCredential("Wrong password")
-            }
-
-            currentPassword := account.CurrentPassword.ValueOrZero()
-            currentPasswordHash := uc.hashPassword(currentPassword)
-
-            log.Info(ctx, "Check password")
-            if currentPasswordHash != user.PasswordHash.ValueOrZero() {
-                log.Warn(ctx, "Password not match")
-                return appstatus.InvalidCredential("Wrong password")
-            }
-
-            log.Info(ctx, "Validate new email")
-            if err := validator.ValidateEmail(email); err != nil {
-                log.Info(ctx, "Email validation failed: " + err.Error())
-                return appstatus.BadEmail(err.Error())
-            }
-
-            log.Info(ctx, "Check if email is used")
-            existUser, err := uc.userRepo.FindUserByEmail(ctx, email, config.Fommu.Domain)
-            if err != nil {
-                log.Error(ctx, "Error: " + err.Error())
-                return appstatus.InternalServerError("Something went wrong")
-            }
-            if existUser != nil {
-                log.Warn(ctx, "Email is already used")
-                return appstatus.BadEmail("Email already used.")
-            }
-
-            log.Info(ctx, "Set new email")
-            user.Email.Set(email)
-            hasUpdate = true
-        } else {
-            log.Info(ctx, "Email has no change")
+        currentPassword := account.CurrentPassword.ValueOrZero()
+        if err := uc.updateEmail(user, currentPassword, email); err != nil {
+            return err
         }
     }
 
     if account.NewPassword != nil {
         log.Info(ctx, "Update password")
-        if account.CurrentPassword == nil {
-            log.Warn(ctx, "Password is empty")
-            return appstatus.InvalidCredential("Wrong password")
-        }
-
         currentPassword := account.CurrentPassword.ValueOrZero()
-        currentPasswordHash := uc.hashPassword(currentPassword)
-
-        log.Info(ctx, "Check password")
-        if currentPasswordHash != user.PasswordHash.ValueOrZero() {
-            log.Warn(ctx, "Password not match")
-            return appstatus.InvalidCredential("Wrong password")
-        }
-
-        log.Info(ctx, "Validate new password")
-        newPassword := account.NewPassword.ValueOrZero()
-        if err := validator.ValidatePassword(newPassword); err != nil {
-            log.Info(ctx, "Password validation failed: " + err.Error())
-            return appstatus.BadPassword(err.Error())
-        }
-        newPasswordHash := uc.hashPassword(newPassword)
-        if newPasswordHash != currentPasswordHash {
-            log.Info(ctx, "Set password")
-            user.PasswordHash.Set(newPasswordHash)
-            hasUpdate = true
-        } else {
-            log.Info(ctx, "Password has no change")
+        if err := uc.updatePassword(user, currentPassword, account.NewPassword.ValueOrZero()); err != nil {
+            return err
         }
     }
 
@@ -129,10 +67,63 @@ func (uc *EditAccountUsecase) Exec(ctx context.Context, username string, account
     return nil
 }
 
-func (uc *EditAccountUsecase) hashPassword(password string) string {
-    h := sha256.New()
-    h.Write([]byte(password))
-    passwordHash := string(base64.StdEncoding.EncodeToString(h.Sum([]byte(password))))
+func (uc *EditAccountUsecase) getUser(ctx context.Context, username string) (*entity.UserEntity, error) {
+    user, err := uc.userRepo.FindUserByUsername(ctx, username, config.Fommu.Domain)
+    if err != nil {
+        log.Error(ctx, "Error: " + err.Error())
+        return nil, appstatus.InternalServerError("Something went wrong")
+    }
+    if user == nil {
+        log.Info(ctx, "User not found")
+        return nil, appstatus.NotFound("user not found.")
+    }
 
-    return passwordHash
+    return user, nil
+}
+
+func (uc *EditAccountUsecase) updateEmail(user *entity.UserEntity, password string, email string) error {
+    if user == nil {
+        return errors.New("user entity is nil")
+    }
+
+    if passwordutil.HashPassword(password) != user.PasswordHash.ValueOrZero() {
+        return appstatus.InvalidCredential("Wrong password")
+    }
+
+    if email == user.Email.ValueOrZero() {
+        return nil
+    }
+
+    if err := validator.ValidateEmail(email); err != nil {
+        return appstatus.BadEmail(err.Error())
+    }
+
+    user.Email.Set(email)
+    user.UpdateAt.Set(time.Now().UTC())
+
+    return nil
+}
+
+func (uc *EditAccountUsecase) updatePassword(user *entity.UserEntity, password string, newPassword string) error {
+    if user == nil {
+        return errors.New("user entity is nil")
+    }
+
+    if passwordutil.HashPassword(password) != user.PasswordHash.ValueOrZero() {
+        return appstatus.InvalidCredential("Wrong password")
+    }
+
+    newPasswordHash := passwordutil.HashPassword(newPassword)
+    if newPasswordHash == user.PasswordHash.ValueOrZero() {
+        return nil
+    }
+
+    if err := validator.ValidatePassword(newPassword); err != nil {
+        return appstatus.BadPassword(err.Error())
+    }
+
+    user.PasswordHash.Set(newPasswordHash)
+    user.UpdateAt.Set(time.Now().UTC())
+
+    return nil
 }

@@ -1,11 +1,10 @@
-package repoImpl
+package repoimpl
 
 import (
+	"app/internal/adapter/httpclient"
+	"app/internal/adapter/mapper"
 	"app/internal/config"
 	"app/internal/core/entity"
-	"app/internal/adapter/httpclient"
-	"app/internal/core/types"
-	"app/internal/utils"
 	"context"
 	"net/url"
 	"reflect"
@@ -15,7 +14,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/snoymy/activitypub"
 )
 
 type UserRepoImpl struct {
@@ -76,7 +74,7 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
             return nil, err
         }
         
-        userTemp, err := r.mapPersonToUser(person)
+        userTemp, err := mapper.PersonToUser(person)
 
         p := bluemonday.UGCPolicy()
         userTemp.Username = p.Sanitize(user.Username)
@@ -164,7 +162,7 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
         return nil, err
     }
 
-    user, err := r.mapPersonToUser(person)
+    user, err := mapper.PersonToUser(person)
     user.ID = uuid.New().String()
     user.Remote = true
     parsedUrl, err := url.Parse(user.ActorId.ValueOrZero())
@@ -221,7 +219,7 @@ func (r *UserRepoImpl) FindUserByActorId(ctx context.Context, actorId string) (*
         return nil, err
     }
 
-    user, err := r.mapPersonToUser(person)
+    user, err := mapper.PersonToUser(person)
     user.ID = uuid.New().String()
     user.Remote = true
     parsedUrl, err := url.Parse(user.ActorId.ValueOrZero())
@@ -303,7 +301,7 @@ func (r *UserRepoImpl) SearchUser(ctx context.Context, textSearch string, domain
         return nil, err
     }
 
-    user, err := r.mapPersonToUser(person)
+    user, err := mapper.PersonToUser(person)
     user.ID = uuid.New().String()
     user.Remote = true
     parsedUrl, err := url.Parse(user.ActorId.ValueOrZero())
@@ -379,103 +377,4 @@ func (r *UserRepoImpl) UpdateUser(ctx context.Context, user *entity.UserEntity) 
     return nil
 }
 
-func (a *UserRepoImpl) mapPersonToUser(person *activitypub.Person) (*entity.UserEntity, error) {
-    user := entity.NewUserEntity()
 
-    if person.ID.IsValid() { 
-        if person.ID.IsLink() { 
-            user.ActorId.Set(person.ID.GetLink().String())
-        }
-    }
-    if person.URL != nil { 
-        user.URL.Set(person.URL.GetLink().String())
-    } else {
-        if person.ID.IsValid() { 
-            if person.ID.IsLink() { 
-                user.URL.Set(person.ID.GetLink().String())
-            }
-        }
-    }
-    if person.PreferredUsername != nil { 
-        user.Username = person.PreferredUsername.String() 
-    }
-    if person.Name != nil {
-        user.Displayname = person.Name.String()
-    }
-    if person.Summary != nil {
-        user.Bio.Set(person.Summary.String())
-    }
-    if person.Followers != nil {
-        user.FollowersURL.Set(person.Followers.GetLink().String())
-    }
-    if person.Following != nil {
-        user.FollowingURL.Set(person.Following.GetLink().String())
-    }
-    if person.Inbox != nil {
-        user.InboxURL.Set(person.Inbox.GetLink().String())
-    }
-    if person.Outbox != nil {
-        user.OutboxURL.Set(person.Outbox.GetLink().String())
-    }
-    if person.Icon != nil {
-        user.Avatar.Set(person.Icon.(*activitypub.Image).URL.GetLink().String())
-    }
-    if person.Image != nil {
-        user.Banner.Set(person.Image.(*activitypub.Image).URL.GetLink().String())
-    }
-    attachments, err := a.parseAttachment(person)
-    if err != nil {
-        return nil, err
-    }
-    user.Attachment.Set(attachments)
-    tags, err := a.parseTag(person)
-    if err != nil {
-        return nil, err
-    }
-    user.Tag.Set(tags)
-    user.PublicKey = person.PublicKey.PublicKeyPem
-
-    return user, nil
-}
-
-func (a *UserRepoImpl) parseAttachment(person *activitypub.Person) (types.JsonArray, error) {
-    var err error
-    attachments := types.JsonArray{}
-    if person.Tag != nil {
-        for _, item := range person.Attachment {
-            var attachment interface{}
-            if item.IsObject() {
-                attachment, err = utils.StructToMap(item.(*activitypub.Object))
-                if err != nil {
-                    return nil, err
-                }
-            } else if item.IsLink() {
-                attachment = item.(*activitypub.Link).GetLink().String()
-            }
-            attachments = append(attachments, attachment)
-        }
-    }
-
-    return attachments, nil
-}
-
-func (a *UserRepoImpl) parseTag(person *activitypub.Person) (types.JsonArray, error) {
-    var err error
-    tags := types.JsonArray{}
-    if person.Tag != nil {
-        for _, item := range person.Tag {
-            var tag interface{}
-            if item.IsObject() {
-                tag, err = utils.StructToMap(item.(*activitypub.Object))
-                if err != nil {
-                    return nil, err
-                }
-            } else if item.IsLink() {
-                tag = item.(*activitypub.Link).GetLink().String()
-            }
-            tags = append(tags, tag)
-        }
-    }
-
-    return tags, nil
-}

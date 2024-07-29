@@ -26,10 +26,24 @@ func (uc *GetTokenUsecase) Exec(ctx context.Context, sessionId string) (*entity.
     }
 
     log.Info(ctx, "Check if session is exist")
+    session, err := uc.getSession(ctx, sessionId)
+    if err != nil {
+        return nil, err
+    }
+
+    log.Info(ctx, "Check if refresh expired")
+    if uc.isSessionExpired(ctx, session) {
+        return nil, appstatus.InvalidToken("Session expired.")
+    }
+
+    return session, nil
+}
+
+func (uc *GetTokenUsecase) getSession(ctx context.Context, sessionId string) (*entity.SessionEntity, error) {
     session, err := uc.sessionRepo.FindSessionByID(ctx, sessionId)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())
-        return nil, err
+        return nil, appstatus.InternalServerError("Something went wrong")
     }
 
     if session == nil {
@@ -37,11 +51,14 @@ func (uc *GetTokenUsecase) Exec(ctx context.Context, sessionId string) (*entity.
         return nil, appstatus.InvalidSession("Session not found.")
     }
 
-    log.Info(ctx, "Check if refresh expired")
+    return session, nil
+}
+
+func (uc *GetTokenUsecase) isSessionExpired(ctx context.Context, session *entity.SessionEntity) bool {
     if session.RefreshExpireAt.Compare(time.Now().UTC()) <= -1 {
         log.Info(ctx, "Refresh token is expired")
-        return nil, appstatus.InvalidToken("Session expired.")
+        return true
     }
 
-    return session, nil
+    return false
 }

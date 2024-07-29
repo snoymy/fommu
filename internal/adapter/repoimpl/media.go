@@ -1,4 +1,4 @@
-package repoImpl
+package repoimpl
 
 import (
 	"app/internal/core/entity"

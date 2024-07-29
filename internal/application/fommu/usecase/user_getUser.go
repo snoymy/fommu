@@ -3,12 +3,10 @@ package usecase
 import (
 	"app/internal/application/fommu/repo"
 	"app/internal/core/appstatus"
-	"app/internal/config"
 	"app/internal/core/entity"
 	"app/internal/log"
 	"context"
 	"fmt"
-	"strings"
 )
 
 type GetUserUsecase struct {
@@ -19,22 +17,12 @@ func NewGetUserUsecase() *GetUserUsecase {
     return &GetUserUsecase{}
 }
 
-func (uc *GetUserUsecase) Exec(ctx context.Context, username string) (*entity.UserEntity, error) {
+func (uc *GetUserUsecase) Exec(ctx context.Context, username string, domain string) (*entity.UserEntity, error) {
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 
     if username == "" {
         return nil, nil
-    }
-
-    log.Info(ctx, "Split username and domain.")
-    s := strings.SplitN(username, "@", 2)
-
-    username = strings.TrimSpace(s[0])
-    domain := config.Fommu.Domain
-    if len(s) > 1 {
-        log.Debug(ctx, "Has domain name.")
-        domain = strings.TrimSpace(s[1])
     }
 
     log.Info(ctx, fmt.Sprintf("Get username=\"%s\", domain=\"%s\"", username, domain))

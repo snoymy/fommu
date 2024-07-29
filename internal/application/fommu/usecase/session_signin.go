@@ -8,10 +8,9 @@ import (
 	"app/internal/core/entity"
 	"app/internal/core/types"
 	"app/internal/log"
-	"app/internal/utils"
+	"app/internal/utils/keygenutil"
+	"app/internal/utils/passwordutil"
 	"context"
-	"crypto/sha256"
-	"encoding/base64"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,63 +29,47 @@ func (uc *SigninUsecase) Exec(ctx context.Context, email string, password string
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 
-    // check email
     log.Info(ctx, "Check user login")
     if email == "" {
         log.Info(ctx, "user login is empty")
         return nil, appstatus.BadLogin("Invalid email/username or password")
     }
-
-    var user *entity.UserEntity = nil
-    log.Info(ctx, "Check user login type")
-    if err := validator.ValidateEmail(email); err == nil {
-        // find user by email
-        log.Info(ctx, "Login by email")
-        user, err = uc.userRepo.FindUserByEmail(ctx, email, config.Fommu.Domain)
-        if err != nil {
-            log.Error(ctx, "Error: " + err.Error())
-            return nil, appstatus.InternalServerError(err.Error())
-        }
-    } else {
-        log.Info(ctx, "Login by username")
-        user, err = uc.userRepo.FindUserByUsername(ctx, email, config.Fommu.Domain)
-        if err != nil {
-            log.Error(ctx, "Error: " + err.Error())
-            return nil, appstatus.InternalServerError(err.Error())
-        }
-    }
-
-    // return error if user is null
-    if user == nil {
-        log.Info(ctx, "User not found")
-        return nil, appstatus.BadLogin("Invalid email/username or password")
+    
+    user, err := uc.getUserLogin(ctx, email)
+    if err != nil {
+        return nil, err
     }
 
     log.Info(ctx, "Check password")
-    // hash password
-    // set password_hash
-    passwordHash := uc.hashPassword(password)
-
-    // return error if password not match
-    if user.PasswordHash.ValueOrZero() != passwordHash {
-        log.Info(ctx, "Invalid password")
+    if !uc.isPasswordMatch(user, password) {
         return nil, appstatus.BadLogin("Invalid email or password")
     }
 
-    // create session id
-    log.Info(ctx, "Create token")
-    accessToken, err := utils.GenerateRandomKey(45)
+    log.Info(ctx, "Create session")
+    session, err := uc.createSession(user, clientData)
     if err != nil {
+        return nil, err
+    }
+
+    log.Info(ctx, "Write session to database")
+    if err := uc.sessionRepo.CreateSession(ctx, session); err != nil {
         log.Error(ctx, "Error: " + err.Error())
+        return nil, err
+    }
+
+    return session, nil
+}
+
+func (uc *SigninUsecase) createSession(user *entity.UserEntity, clientData types.JsonObject) (*entity.SessionEntity, error) {
+    accessToken, err := keygenutil.GenerateRandomKey(45)
+    if err != nil {
         return nil, appstatus.InternalServerError(err.Error())
     }
-    refreshToken, err := utils.GenerateRandomKey(45)
+    refreshToken, err := keygenutil.GenerateRandomKey(45)
     if err != nil {
-        log.Error(ctx, "Error: " + err.Error())
         return nil, appstatus.InternalServerError(err.Error())
     }
 
-    log.Info(ctx, "Create session")
     session := entity.NewSessionEntity()
     session.ID = uuid.New().String()
     session.AccessToken = accessToken
@@ -101,20 +84,37 @@ func (uc *SigninUsecase) Exec(ctx context.Context, email string, password string
     }
     session.LoginAt = time.Now().UTC()
     session.LastRefresh.SetNull()
-    // write session to db
-    log.Info(ctx, "Write session to database")
-    if err := uc.sessionRepo.CreateSession(ctx, session); err != nil {
-        log.Error(ctx, "Error: " + err.Error())
-        return nil, err
-    }
-    // return session 
+
     return session, nil
 }
 
-func (uc *SigninUsecase) hashPassword(password string) string {
-    h := sha256.New()
-    h.Write([]byte(password))
-    passwordHash := string(base64.StdEncoding.EncodeToString(h.Sum([]byte(password))))
+func (uc *SigninUsecase) getUserLogin(ctx context.Context, email string) (*entity.UserEntity, error) {
+    var user *entity.UserEntity
+    if err := validator.ValidateEmail(email); err == nil {
+        var err error
+        user, err = uc.userRepo.FindUserByEmail(ctx, email, config.Fommu.Domain)
+        if err != nil {
+            return nil, appstatus.InternalServerError(err.Error())
+        }
+    } else {
+        var err error
+        user, err = uc.userRepo.FindUserByUsername(ctx, email, config.Fommu.Domain)
+        if err != nil {
+            return nil, appstatus.InternalServerError(err.Error())
+        }
+    }
 
-    return passwordHash
+    if user == nil {
+        return nil, appstatus.BadLogin("Invalid email/username or password")
+    }
+
+    return user, nil
+}
+
+func (uc *SigninUsecase) isPasswordMatch(user *entity.UserEntity, password string) bool {
+    passwordHash := passwordutil.HashPassword(password)
+    if user.PasswordHash.ValueOrZero() == passwordHash {
+        return true
+    }
+    return false
 }

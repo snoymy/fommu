@@ -1,20 +1,16 @@
 package usecase
 
 import (
-	"app/internal/core/entity"
 	"app/internal/application/fommu/repo"
 	"app/internal/application/fommu/validator"
-	"app/internal/core/appstatus"
 	"app/internal/config"
-	"app/internal/log"
+	"app/internal/core/appstatus"
+	"app/internal/core/entity"
 	"app/internal/core/types"
+	"app/internal/log"
+	"app/internal/utils/keygenutil"
+	"app/internal/utils/passwordutil"
 	"context"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/sha256"
-	"crypto/x509"
-	"encoding/base64"
-	"encoding/pem"
 	"time"
 
 	"github.com/google/uuid"
@@ -32,109 +28,27 @@ func (uc *SignupUsecase) Exec(ctx context.Context, email string, username string
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 
-    var (
-        existUser *entity.UserEntity
-        err error
-    )
-
-    // validate username
-    log.Info(ctx, "Validate username.")
-    if err := validator.ValidateUsername(username); err != nil {
-        return appstatus.BadUsername(err.Error())
-    }
-
-    // check if username is used
-    log.Info(ctx, "Check username if used.")
-    existUser, err = uc.userRepository.FindUserByUsername(ctx, username, config.Fommu.Domain)
-    if err != nil {
-        log.Error(ctx, "Error: " + err.Error())
-        return appstatus.InternalServerError("Somethig went wrong")
-    }
-    if existUser != nil {
-        log.Info(ctx, "Username already used.")
-        return appstatus.BadUsername("Username already used.")
-    }
-
-    // validate email
     log.Info(ctx, "Validate email.")
-    if err := validator.ValidateEmail(email); err != nil {
-        log.Info(ctx, "Email validation failed: " + err.Error())
-        return appstatus.BadEmail(err.Error())
+    if err := uc.validateEmail(ctx, email); err != nil {
+        return err
     }
 
-    // check if email is used
-    log.Info(ctx, "Check email if used.")
-    existUser, err = uc.userRepository.FindUserByEmail(ctx, email, config.Fommu.Domain)
-    if err != nil {
-        log.Error(ctx, "Error: " + err.Error())
-        return appstatus.InternalServerError("Somethig went wrong")
-    }
-    if existUser != nil {
-        log.Info(ctx, "Email already used.")
-        return appstatus.BadEmail("Email already used.")
+    log.Info(ctx, "Validate username.")
+    if err := uc.validateUsername(ctx, username); err != nil {
+        return err
     }
 
-    // validate password
     log.Info(ctx, "Validate password.")
-    if err := validator.ValidatePassword(password); err != nil {
-        log.Info(ctx, "Password validation failed: " + err.Error())
-        return appstatus.BadPassword(err.Error())
+    if err := uc.validatePassword(password); err != nil {
+        return err
     }
-    
+
     log.Info(ctx, "Create user entity.")
-    user := entity.NewUserEntity()
-    // set id
-    user.ID = uuid.New().String()
-    // set email
-    user.Email.Set(email)
-    // set username
-    user.Username = username
-
-    // hash password
-    // set password_hash
-    log.Info(ctx, "Hashing Password.")
-    user.PasswordHash.Set(uc.hashPassword(password))
-
-    // set display name
-    user.Displayname = username
-    // set url
-    // user.URL, err = url.JoinPath(config.Fommu.URL, "users", user.Username)
-    // if err != nil {
-    //     return appstatus.InternalServerError(err.Error())
-    // }
-    // set remote
-    user.Remote = false
-    // set discoverable
-    user.Discoverable = true 
-    // set auto_approve_follower
-    user.AutoApproveFollower = false
-
-    user.Domain = config.Fommu.Domain
-    user.Preference.SetNull()
-    user.Attachment.Set(types.JsonArray{})
-    user.Tag.Set(types.JsonArray{})
-
-    // generate key
-    log.Info(ctx, "Generate public/private key.")
-    const bitSize = 4096
-    privateKeyByte, publicKeyByte, err := uc.generateKeyPair(bitSize)
+    user, err := uc.createUser(email, username, password)
     if err != nil {
-        log.Error(ctx, "Error: " + err.Error())
-        return appstatus.InternalServerError("Somethig went wrong")
+        return err
     }
 
-    // set private key
-    user.PrivateKey.Set(string(privateKeyByte))
-    // set public key
-    user.PublicKey = string(publicKeyByte)
-
-    user.JoinAt.Set(time.Now().UTC())
-    // set create date
-    user.CreateAt = time.Now().UTC()
-    // set active
-    user.Status = "active"
-
-    // write user to db
     log.Info(ctx, "Write user to database.")
     if err := uc.userRepository.CreateUser(ctx, user); err != nil {
         log.Error(ctx, "Error: " + err.Error())
@@ -144,80 +58,73 @@ func (uc *SignupUsecase) Exec(ctx context.Context, email string, username string
     return nil
 }
 
-func (uc *SignupUsecase) hashPassword(password string) string {
-    h := sha256.New()
-    h.Write([]byte(password))
-    passwordHash := string(base64.StdEncoding.EncodeToString(h.Sum([]byte(password))))
+func (uc *SignupUsecase) createUser(email string, username string, password string) (*entity.UserEntity, error) {
+    user := entity.NewUserEntity()
+    user.ID = uuid.New().String()
+    user.Email.Set(email)
+    user.Username = username
 
-    return passwordHash
-}
+    user.PasswordHash.Set(passwordutil.HashPassword(password))
+    user.Displayname = username
+    user.Remote = false
+    user.Discoverable = true 
+    user.AutoApproveFollower = false
+    user.Domain = config.Fommu.Domain
+    user.Preference.SetNull()
+    user.Attachment.Set(types.JsonArray{})
+    user.Tag.Set(types.JsonArray{})
 
-func (uc *SignupUsecase) generateKeyPair(bitSize int) ([]byte, []byte, error) {
-    privateKey, err := uc.generatePrivateKey(bitSize)
+    const bitSize = 4096
+    privateKeyByte, publicKeyByte, err := keygenutil.GenerateKeyPair(bitSize)
     if err != nil {
-        return nil, nil, err
+        return nil, appstatus.InternalServerError("Somethig went wrong")
     }
 
-    publicKeyByte, err := uc.generatePublicKey(privateKey)
-    if err != nil {
-        return nil, nil, err
+    user.PrivateKey.Set(string(privateKeyByte))
+    user.PublicKey = string(publicKeyByte)
+    user.JoinAt.Set(time.Now().UTC())
+    user.CreateAt = time.Now().UTC()
+    user.Status = "active"
+
+    return user, nil
+}
+
+func (uc *SignupUsecase) validateUsername(ctx context.Context, username string) error {
+    if err := validator.ValidateUsername(username); err != nil {
+        return appstatus.BadUsername(err.Error())
     }
 
-    privateKeyByte := uc.encodePrivateKeyToPEM(privateKey)
-
-    return privateKeyByte, publicKeyByte, nil
-}
-
-
-func (uc *SignupUsecase) generatePrivateKey(bitSize int) (*rsa.PrivateKey, error) {
-	// Private Key generation
-	privateKey, err := rsa.GenerateKey(rand.Reader, bitSize)
-	if err != nil {
-		return nil, err
-	}
-
-	// Validate Private Key
-	err = privateKey.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	return privateKey, nil
-}
-
-func (uc *SignupUsecase) generatePublicKey(privatekey *rsa.PrivateKey) ([]byte, error) {
-	// Get ASN.1 DER format
-	pubDER, err := x509.MarshalPKIXPublicKey(&privatekey.PublicKey)
+    existUser, err := uc.userRepository.FindUserByUsername(ctx, username, config.Fommu.Domain)
     if err != nil {
-        return nil, err
+        return appstatus.InternalServerError("Somethig went wrong")
+    }
+    if existUser != nil {
+        return appstatus.BadUsername("Username already used.")
     }
 
-	// pem.Block
-	pubBlock := pem.Block{
-		Type:    "PUBLIC KEY",
-		Headers: nil,
-		Bytes:   pubDER,
-	}
-
-	// Private key in PEM format
-	publicPEM := pem.EncodeToMemory(&pubBlock)
-
-	return publicPEM, nil
+    return nil
 }
 
-func (uc *SignupUsecase) encodePrivateKeyToPEM(privateKey *rsa.PrivateKey) []byte {
-	// Get ASN.1 DER format
-	privDER := x509.MarshalPKCS1PrivateKey(privateKey)
+func (uc *SignupUsecase) validateEmail(ctx context.Context, email string) error {
+    if err := validator.ValidateEmail(email); err != nil {
+        return appstatus.BadEmail(err.Error())
+    }
 
-	// pem.Block
-	privBlock := pem.Block{
-		Type:    "PRIVATE KEY",
-		Headers: nil,
-		Bytes:   privDER,
-	}
+    existUser, err := uc.userRepository.FindUserByEmail(ctx, email, config.Fommu.Domain)
+    if err != nil {
+        return appstatus.InternalServerError("Somethig went wrong")
+    }
+    if existUser != nil {
+        return appstatus.BadEmail("Email already used.")
+    }
 
-	// Private key in PEM format
-	privatePEM := pem.EncodeToMemory(&privBlock)
+    return nil
+}
 
-	return privatePEM
+func (uc *SignupUsecase) validatePassword(password string) error {
+    if err := validator.ValidatePassword(password); err != nil {
+        return appstatus.BadPassword(err.Error())
+    }
+
+    return nil
 }
