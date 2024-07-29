@@ -40,6 +40,9 @@ func (r *UserRepoImpl) FindUserByID(ctx context.Context, id string) (*entity.Use
 }
 
 func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, domain string) (*entity.UserEntity, error) {
+    if domain == "" {
+        domain = config.Fommu.Domain
+    }
     var users []*entity.UserEntity = nil
     err := r.db.Select(&users, "select * from users where username=$1 and domain=$2", username, domain)
     if err != nil {
