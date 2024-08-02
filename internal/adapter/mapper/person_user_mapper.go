@@ -1,7 +1,6 @@
 package mapper
 
 import (
-	"app/internal/config"
 	"app/internal/core/entity"
 	"app/internal/core/types"
 	"app/internal/utils/mimeutil"
@@ -11,46 +10,48 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/snoymy/activitypub"
 )
 
 func PersonToUser(person *activitypub.Person) (*entity.UserEntity, error) {
+    p := bluemonday.UGCPolicy()
     user := entity.NewUserEntity()
 
     if person.ID.IsValid() { 
         if person.ID.IsLink() { 
-            user.ActorId.Set(person.ID.GetLink().String())
+            user.ActorId = person.ID.GetLink().String()
         }
     }
     if person.URL != nil { 
-        user.URL.Set(person.URL.GetLink().String())
+        user.URL = person.URL.GetLink().String()
     } else {
         if person.ID.IsValid() { 
             if person.ID.IsLink() { 
-                user.URL.Set(person.ID.GetLink().String())
+                user.URL = person.ID.GetLink().String()
             }
         }
     }
     if person.PreferredUsername != nil { 
-        user.Username = person.PreferredUsername.String() 
+        user.Username = p.Sanitize(person.PreferredUsername.String())
     }
     if person.Name != nil {
-        user.Displayname = person.Name.String()
+        user.Displayname = p.Sanitize(person.Name.String())
     }
     if person.Summary != nil {
-        user.Bio.Set(person.Summary.String())
+        user.Bio.Set(p.Sanitize(person.Summary.String()))
     }
     if person.Followers != nil {
-        user.FollowersURL.Set(person.Followers.GetLink().String())
+        user.FollowersURL = person.Followers.GetLink().String()
     }
     if person.Following != nil {
-        user.FollowingURL.Set(person.Following.GetLink().String())
+        user.FollowingURL = person.Following.GetLink().String()
     }
     if person.Inbox != nil {
-        user.InboxURL.Set(person.Inbox.GetLink().String())
+        user.InboxURL = person.Inbox.GetLink().String()
     }
     if person.Outbox != nil {
-        user.OutboxURL.Set(person.Outbox.GetLink().String())
+        user.OutboxURL = person.Outbox.GetLink().String()
     }
     if person.Icon != nil {
         user.Avatar.Set(person.Icon.(*activitypub.Image).URL.GetLink().String())
@@ -67,6 +68,8 @@ func PersonToUser(person *activitypub.Person) (*entity.UserEntity, error) {
     if err != nil {
         return nil, err
     }
+    parsedUrl, err := url.Parse(user.ActorId)
+    user.Domain = strings.TrimPrefix(parsedUrl.Hostname(), "www.")
     user.Tag.Set(tags)
     user.PublicKey = person.PublicKey.PublicKeyPem
 
@@ -78,45 +81,24 @@ func UserToPerson(user *entity.UserEntity) (*activitypub.Person, error) {
         return nil, errors.New("user is nil")
     }
 
-    userURL, err := url.JoinPath(config.Fommu.URL, "users", user.Username)
-    if err != nil {
-        return nil, err
-    }
-    inboxURL, err := url.JoinPath(userURL, "inbox")
-    if err != nil {
-        return nil, err
-    }
-    outbox, err := url.JoinPath(userURL, "outbox")
-    if err != nil {
-        return nil, err
-    }
-    followersURL, err := url.JoinPath(userURL, "followers")
-    if err != nil {
-        return nil, err
-    }
-    followingURL, err := url.JoinPath(userURL, "following")
-    if err != nil {
-        return nil, err
-    }
-
-    person := activitypub.PersonNew(activitypub.IRI(userURL))
+    person := activitypub.PersonNew(activitypub.IRI(user.ActorId))
 
     person.Name = activitypub.NaturalLanguageValuesNew(activitypub.LangRefValueNew(activitypub.DefaultLang, user.Displayname))
     person.PreferredUsername = activitypub.NaturalLanguageValuesNew(activitypub.LangRefValueNew(activitypub.DefaultLang, user.Username))
-    person.Inbox = activitypub.IRI(inboxURL)
-    person.Outbox = activitypub.IRI(outbox)
-    person.Followers = activitypub.IRI(followersURL)
-    person.Following = activitypub.IRI(followingURL)
+    person.Inbox = activitypub.IRI(user.InboxURL)
+    person.Outbox = activitypub.IRI(user.OutboxURL)
+    person.Followers = activitypub.IRI(user.FollowersURL)
+    person.Following = activitypub.IRI(user.FollowingURL)
     person.PublicKey = activitypub.PublicKey{
-        ID: activitypub.IRI(userURL + "#main-key"),
-        Owner: activitypub.IRI(userURL),
+        ID: activitypub.IRI(user.ActorId + "#main-key"),
+        Owner: activitypub.IRI(user.ActorId),
         PublicKeyPem: user.PublicKey,
     }
     person.Summary = activitypub.NaturalLanguageValuesNew(activitypub.LangRefValueNew(
         activitypub.DefaultLang, 
         strings.ReplaceAll(strings.ReplaceAll(stringutil.Linkify(user.Bio.ValueOrZero()), "\n", "<br>"), " ", "&nbsp;"),
     ))
-    person.URL = activitypub.IRI(userURL)
+    person.URL = activitypub.IRI(user.URL)
     person.Icon = activitypub.Image{
         Type: activitypub.ImageType,
         MediaType: activitypub.MimeType(mimeutil.GetMIMEFromExtension(filepath.Ext(user.Avatar.ValueOrZero()))),

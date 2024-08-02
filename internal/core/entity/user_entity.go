@@ -21,12 +21,12 @@ type UserEntity struct {
     Tag                 types.Nullable[types.JsonArray]     `db:"tag"`
     Attachment          types.Nullable[types.JsonArray]     `db:"attachment"`
     Remote              bool                                `db:"remote"`
-    ActorId             types.Nullable[string]              `db:"actor_id"`
-    URL                 types.Nullable[string]              `db:"url"`
-    InboxURL            types.Nullable[string]              `db:"inbox_url"`
-    OutboxURL           types.Nullable[string]              `db:"outbox_url"`
-    FollowersURL        types.Nullable[string]              `db:"followers_url"`
-    FollowingURL        types.Nullable[string]              `db:"following_url"`
+    ActorId             string                              `db:"actor_id"`
+    URL                 string                              `db:"url"`
+    InboxURL            string                              `db:"inbox_url"`
+    OutboxURL           string                              `db:"outbox_url"`
+    FollowersURL        string                              `db:"followers_url"`
+    FollowingURL        string                              `db:"following_url"`
     Domain              string                              `db:"domain"`
     Discoverable        bool                                `db:"discoverable"`
     AutoApproveFollower bool                                `db:"auto_approve_follower"`

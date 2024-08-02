@@ -6,14 +6,12 @@ import (
 	"app/internal/config"
 	"app/internal/core/entity"
 	"context"
-	"net/url"
 	"reflect"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/microcosm-cc/bluemonday"
 )
 
 type UserRepoImpl struct {
@@ -59,7 +57,7 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
             return user, nil
         }
 
-        person, err := r.apClient.GetUserByUrl(ctx, user.URL.ValueOrZero())
+        person, err := r.apClient.GetUserByUrl(ctx, user.URL)
         if err != nil {
             return user, err
         }
@@ -79,11 +77,6 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
         
         userTemp, err := mapper.PersonToUser(person)
 
-        p := bluemonday.UGCPolicy()
-        userTemp.Username = p.Sanitize(user.Username)
-        userTemp.Displayname = p.Sanitize(user.Displayname)
-        userTemp.Bio.Set(p.Sanitize(user.Bio.ValueOrZero()))
-
         if followers != nil {
             userTemp.FollowerCount = int(followers.TotalItems)
         }
@@ -100,23 +93,23 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
             user.Bio = userTemp.Bio
             hasUpdate = true
         } 
-        if user.FollowersURL.ValueOrZero() != userTemp.FollowersURL.ValueOrZero() {
+        if user.FollowersURL != userTemp.FollowersURL {
             user.FollowersURL = userTemp.FollowersURL
             hasUpdate = true
         } 
-        if user.FollowingURL.ValueOrZero() != userTemp.FollowingURL.ValueOrZero() {
+        if user.FollowingURL != userTemp.FollowingURL {
             user.FollowingURL = userTemp.FollowingURL
             hasUpdate = true
         } 
-        if user.InboxURL.ValueOrZero() != userTemp.InboxURL.ValueOrZero(){
+        if user.InboxURL != userTemp.InboxURL {
             user.InboxURL = userTemp.InboxURL
             hasUpdate = true
         } 
-        if user.OutboxURL.ValueOrZero() != userTemp.OutboxURL.ValueOrZero(){
+        if user.OutboxURL != userTemp.OutboxURL {
             user.OutboxURL = userTemp.OutboxURL
             hasUpdate = true
         } 
-        if user.Avatar.ValueOrZero() != userTemp.Avatar.ValueOrZero(){
+        if user.Avatar != userTemp.Avatar {
             user.Avatar = userTemp.Avatar
             hasUpdate = true
         } 
@@ -168,15 +161,8 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
     user, err := mapper.PersonToUser(person)
     user.ID = uuid.New().String()
     user.Remote = true
-    parsedUrl, err := url.Parse(user.ActorId.ValueOrZero())
-    user.Domain = strings.TrimPrefix(parsedUrl.Hostname(), "www.")
     user.Remote = true
     user.Discoverable = true
-
-    p := bluemonday.UGCPolicy()
-    user.Username = p.Sanitize(user.Username)
-    user.Displayname = p.Sanitize(user.Displayname)
-    user.Bio.Set(p.Sanitize(user.Bio.ValueOrZero()))
     user.CreateAt = time.Now().UTC()
 
     if followers != nil {
@@ -225,15 +211,8 @@ func (r *UserRepoImpl) FindUserByActorId(ctx context.Context, actorId string) (*
     user, err := mapper.PersonToUser(person)
     user.ID = uuid.New().String()
     user.Remote = true
-    parsedUrl, err := url.Parse(user.ActorId.ValueOrZero())
-    user.Domain = strings.TrimPrefix(parsedUrl.Hostname(), "www.")
     user.Remote = true
     user.Discoverable = true
-
-    p := bluemonday.UGCPolicy()
-    user.Username = p.Sanitize(user.Username)
-    user.Displayname = p.Sanitize(user.Displayname)
-    user.Bio.Set(p.Sanitize(user.Bio.ValueOrZero()))
 
     if followers != nil {
         user.FollowerCount = int(followers.TotalItems)
@@ -307,15 +286,9 @@ func (r *UserRepoImpl) SearchUser(ctx context.Context, textSearch string, domain
     user, err := mapper.PersonToUser(person)
     user.ID = uuid.New().String()
     user.Remote = true
-    parsedUrl, err := url.Parse(user.ActorId.ValueOrZero())
-    user.Domain = strings.TrimPrefix(parsedUrl.Hostname(), "www.")
     user.Remote = true
     user.Discoverable = true
 
-    p := bluemonday.UGCPolicy()
-    user.Username = p.Sanitize(user.Username)
-    user.Displayname = p.Sanitize(user.Displayname)
-    user.Bio.Set(p.Sanitize(user.Bio.ValueOrZero()))
     user.CreateAt = time.Now().UTC()
 
     if followers != nil {

@@ -11,6 +11,7 @@ import (
 	"app/internal/utils/keygenutil"
 	"app/internal/utils/passwordutil"
 	"context"
+	"net/url"
 	"time"
 
 	"github.com/google/uuid"
@@ -74,11 +75,44 @@ func (uc *SignupUsecase) createUser(email string, username string, password stri
     user.Attachment.Set(types.JsonArray{})
     user.Tag.Set(types.JsonArray{})
 
+
+    userUrl, err := url.JoinPath(config.Fommu.URL, "users", user.Username)
+    if err != nil {
+        return nil, err
+    }
+
+    inboxURL, err := url.JoinPath(userUrl, "inbox")
+    if err != nil {
+        return nil, err
+    }
+
+    outbox, err := url.JoinPath(userUrl, "outbox")
+    if err != nil {
+        return nil, err
+    }
+
+    followersURL, err := url.JoinPath(userUrl, "followers")
+    if err != nil {
+        return nil, err
+    }
+
+    followingURL, err := url.JoinPath(userUrl, "following")
+    if err != nil {
+        return nil, err
+    }
+
     const bitSize = 4096
     privateKeyByte, publicKeyByte, err := keygenutil.GenerateKeyPair(bitSize)
     if err != nil {
         return nil, appstatus.InternalServerError("Somethig went wrong")
     }
+
+    user.ActorId = userUrl
+    user.URL = userUrl
+    user.InboxURL = inboxURL
+    user.OutboxURL = outbox
+    user.FollowersURL = followersURL
+    user.FollowingURL = followingURL
 
     user.PrivateKey.Set(string(privateKeyByte))
     user.PublicKey = string(publicKeyByte)

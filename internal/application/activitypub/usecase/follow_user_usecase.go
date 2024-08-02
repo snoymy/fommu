@@ -25,28 +25,60 @@ func NewFollowUserUsecase() *FollowUserUsecase {
 }
 
 func (uc *FollowUserUsecase) Exec(ctx context.Context, activity *activitypub.Activity) error {
-    // check if activity is empty
-    if activity == nil {
-        return appstatus.BadValue("Invalid activity.")
+    if err := uc.validateActivity(activity); err != nil {
+        return err
     }
-    // check if activity type is Follow
-    if activity.Type != activitypub.FollowType {
-        return appstatus.BadValue("Invalid activity type.")
-    }
-    // find follower user by actor id
-    if !activity.Actor.IsLink() {
-        appstatus.BadValue("Unsupport actor type.")
-    }
-    followerId := activity.Actor.GetLink().String()
-    follower, err := uc.userRepo.FindUserByActorId(ctx, followerId)
+
+    follower, err := uc.getFollower(ctx, activity)
     if err != nil {
         return err
     }
-    if follower == nil {
-        return appstatus.NotFound("Follower not found.")
+
+    target, err := uc.getTarget(ctx, activity)
+    if err != nil {
+        return err
     }
 
-    // check if object is url
+    following := uc.createFollow(follower, target)
+
+    // insert data to db
+    if err := uc.followingRepo.CreateFollowing(ctx, following); err != nil {
+        return err
+    }
+
+    return nil
+}
+
+func (uc *FollowUserUsecase) validateActivity(activity *activitypub.Activity) error {
+    if activity == nil {
+        return appstatus.BadValue("Invalid activity.")
+    }
+
+    if activity.Type != activitypub.FollowType {
+        return appstatus.BadValue("Invalid activity type.")
+    }
+
+    if !activity.Actor.IsLink() {
+        appstatus.BadValue("Unsupport actor type.")
+    }
+
+    return nil
+}
+
+func (uc *FollowUserUsecase) getFollower(ctx context.Context, activity *activitypub.Activity) (*entity.UserEntity, error) {
+    followerId := activity.Actor.GetLink().String()
+    follower, err := uc.userRepo.FindUserByActorId(ctx, followerId)
+    if err != nil {
+        return nil, err
+    }
+    if follower == nil {
+        return nil, appstatus.NotFound("Follower not found.")
+    }
+
+    return follower, nil
+}
+
+func (uc *FollowUserUsecase) getTarget(ctx context.Context, activity *activitypub.Activity) (*entity.UserEntity, error) {
     if !activity.Object.IsLink() {
         appstatus.BadValue("Unsupport object type.")
     }
@@ -54,20 +86,27 @@ func (uc *FollowUserUsecase) Exec(ctx context.Context, activity *activitypub.Act
 
     parsedUrl, err := url.Parse(targetId)
     if err != nil {
-        return appstatus.BadValue("Invalid following ID.")
+        return nil, appstatus.BadValue("Invalid following ID.")
     }
+
     if strings.TrimPrefix(parsedUrl.Hostname(), "www.") != config.Fommu.Domain {
-        return appstatus.BadValue("Invalid following ID.")
+        return nil, appstatus.BadValue("Invalid following ID.")
     }
+
     targetUsername := path.Base(parsedUrl.Path)
     target, err := uc.userRepo.FindUserByUsername(ctx, targetUsername, config.Fommu.Domain)
     if err != nil {
-        return err
-    }
-    if target == nil {
-        return appstatus.NotFound("Target user not found.")
+        return nil, err
     }
 
+    if target == nil {
+        return nil, appstatus.NotFound("Target user not found.")
+    }
+
+    return target, nil
+}
+
+func (uc *FollowUserUsecase) createFollow(follower *entity.UserEntity, target *entity.UserEntity) *entity.FollowingEntity {
     following := entity.NewFollowingEntity()
     following.ID = uuid.New().String()
     following.Follower = follower.ID
@@ -78,11 +117,6 @@ func (uc *FollowUserUsecase) Exec(ctx context.Context, activity *activitypub.Act
         following.Status = "pending"
     }
     following.CreateAt = time.Now().UTC()
-    // insert data to db
-    if err := uc.followingRepo.CreateFollowing(ctx, following); err != nil {
-        return err
-    }
 
-    return nil
+    return following
 }
-
