@@ -17,7 +17,7 @@ import (
 
 type FollowUserUsecase struct {
     userRepo      repo.UsersRepo     `injectable:""`
-    followingRepo repo.FollowingRepo `injectable:""`
+    followingRepo repo.FollowRepo `injectable:""`
 }
 
 func NewFollowUserUsecase() *FollowUserUsecase {
@@ -106,8 +106,8 @@ func (uc *FollowUserUsecase) getTarget(ctx context.Context, activity *activitypu
     return target, nil
 }
 
-func (uc *FollowUserUsecase) createFollow(follower *entity.UserEntity, target *entity.UserEntity) *entity.FollowingEntity {
-    following := entity.NewFollowingEntity()
+func (uc *FollowUserUsecase) createFollow(follower *entity.UserEntity, target *entity.UserEntity) *entity.FollowEntity {
+    following := entity.NewFollowEntity()
     following.ID = uuid.New().String()
     following.Follower = follower.ID
     following.Following = target.ID

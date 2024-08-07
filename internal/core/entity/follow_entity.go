@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type FollowingEntity struct {
+type FollowEntity struct {
     ID                  string                              `db:"id"`
     Follower            string                              `db:"follower"`
     Following           string                              `db:"following"`
@@ -14,6 +14,6 @@ type FollowingEntity struct {
     UpdateAt            types.Nullable[time.Time]           `db:"update_at"`
 }
 
-func NewFollowingEntity() *FollowingEntity {
-    return &FollowingEntity{}
+func NewFollowEntity() *FollowEntity {
+    return &FollowEntity{}
 }

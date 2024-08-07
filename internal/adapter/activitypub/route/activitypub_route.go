@@ -34,7 +34,7 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient httpclient.ActivitypubClient)
 
     // repo and adapter
     container.Register(func() repo.UsersRepo { return repoimpl.NewUserRepoImpl() })
-    container.Register(func() repo.FollowingRepo { return repoimpl.NewFollowingRepoImpl() })
+    container.Register(func() repo.FollowRepo { return repoimpl.NewFollowRepoImpl() })
 
     // usecase
     container.Register(usecase.NewVerifySignatureUsecase)

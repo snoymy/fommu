@@ -7,15 +7,15 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type FollowingRepoImpl struct {
+type FollowRepoImpl struct {
     db *sqlx.DB `injectable:""`
 }
 
-func NewFollowingRepoImpl() *FollowingRepoImpl {
-    return &FollowingRepoImpl{}
+func NewFollowRepoImpl() *FollowRepoImpl {
+    return &FollowRepoImpl{}
 }
 
-func (r *FollowingRepoImpl) CreateFollowing(ctx context.Context, following *entity.FollowingEntity) error {
+func (r *FollowRepoImpl) CreateFollowing(ctx context.Context, following *entity.FollowEntity) error {
     var rowsCount []int = nil
     err := r.db.Select(&rowsCount, "select count(*) from following where follower = $1 and following = $2", following.Follower, following.Following)
     if err != nil {
