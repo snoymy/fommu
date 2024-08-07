@@ -2,12 +2,14 @@ package route
 
 import (
 	"app/internal/adapter/activitypub/controller"
-	"app/internal/application/activitypub/usecase"
-	"app/internal/adapter/repoimpl"
-	"app/internal/application/activitypub/repo"
 	"app/internal/adapter/activitypub/middleware"
+	"app/internal/adapter/command"
 	"app/internal/adapter/handler"
 	"app/internal/adapter/httpclient"
+	"app/internal/adapter/query"
+	"app/internal/adapter/repoimpl"
+	"app/internal/application/activitypub/repo"
+	"app/internal/application/activitypub/usecase"
 	"app/internal/log"
 	"app/lib/di"
 	"context"
@@ -16,7 +18,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient) {
+func InitRoute(r chi.Router, db *sqlx.DB, apClient httpclient.ActivitypubClient) {
     ctx := context.Background()
 
     log.EnterMethod(ctx)
@@ -26,7 +28,9 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient *httpclient.ActivitypubClient
 
     container.Register(func() chi.Router { return r })
     container.Register(func() *sqlx.DB { return db })
-    container.Register(func() *httpclient.ActivitypubClient { return apClient })
+    container.Register(func() httpclient.ActivitypubClient { return apClient })
+    container.Register(query.NewQuery)
+    container.Register(command.NewCommand)
 
     // repo and adapter
     container.Register(func() repo.UsersRepo { return repoimpl.NewUserRepoImpl() })

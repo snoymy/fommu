@@ -25,7 +25,7 @@ func main() {
     db := database.NewConnection()
     defer db.Close()
 
-    apClient := httpclient.NewActivitypubClient()
+    apClient := httpclient.NewActivitypubClientImpl()
 
     if err := database.TestConnection(db); err != nil {
         log.Panic(ctx, err.Error())

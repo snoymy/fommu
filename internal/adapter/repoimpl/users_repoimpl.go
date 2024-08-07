@@ -1,22 +1,21 @@
 package repoimpl
 
 import (
-	"app/internal/adapter/httpclient"
+	"app/internal/adapter/command"
 	"app/internal/adapter/mapper"
+	"app/internal/adapter/query"
 	"app/internal/config"
 	"app/internal/core/entity"
 	"context"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 )
 
 type UserRepoImpl struct {
-    db       *sqlx.DB                      `injectable:""`
-    apClient *httpclient.ActivitypubClient `injectable:""`
+    query *query.Query `injectable:""`
+    command *command.Command `injectable:""`
 }
 
 func NewUserRepoImpl() *UserRepoImpl {
@@ -24,31 +23,25 @@ func NewUserRepoImpl() *UserRepoImpl {
 }
 
 func (r *UserRepoImpl) FindUserByID(ctx context.Context, id string) (*entity.UserEntity, error) {
-    var users []*entity.UserEntity = nil
-    err := r.db.Select(&users, "select * from users where id=$1", id)
+    user, err := r.query.FindUserById(ctx, id)
     if err != nil {
         return nil, err
     }
 
-    if users == nil {
-        return nil, nil
-    }
-
-    return users[0], nil
+    return user, nil
 }
 
 func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, domain string) (*entity.UserEntity, error) {
     if domain == "" {
         domain = config.Fommu.Domain
     }
-    var users []*entity.UserEntity = nil
-    err := r.db.Select(&users, "select * from users where username=$1 and domain=$2", username, domain)
+
+    user, err := r.query.FindUserByUsername(ctx, username, domain)
     if err != nil {
         return nil, err
     }
 
-    if users != nil {
-        user := users[0]
+    if user != nil {
         if user.Domain == config.Fommu.Domain {
             return user, nil
         }
@@ -57,7 +50,7 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
             return user, nil
         }
 
-        person, err := r.apClient.GetUserByUrl(ctx, user.URL)
+        person, err := r.query.FindPersonByActorId(ctx, user.ActorId)
         if err != nil {
             return user, err
         }
@@ -65,12 +58,12 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
             return user, nil
         }
 
-        followers, err := r.apClient.GetFollowersByUrl(ctx, person.Followers.GetLink().String(), 0)
+        followers, err := r.query.FindPersonFollowers(ctx, person, 0)
         if err != nil {
             return nil, err
         }
 
-        following, err := r.apClient.GetFollowingByUrl(ctx, person.Following.GetLink().String(), 0)
+        following, err := r.query.FindPersonFollowing(ctx, person, 0)
         if err != nil {
             return nil, err
         }
@@ -142,23 +135,23 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
         return user, nil
     }
 
-    person, err := r.apClient.FindUserByUsername(ctx, username, domain)
+    person, err := r.query.FindPersonByUsername(ctx, username, domain)
 
     if person == nil {
         return nil, nil
     }
 
-    followers, err := r.apClient.GetFollowersByUrl(ctx, person.Followers.GetLink().String(), 0)
+    followers, err := r.query.FindPersonFollowers(ctx, person, 0)
     if err != nil {
         return nil, err
     }
 
-    following, err := r.apClient.GetFollowingByUrl(ctx, person.Following.GetLink().String(), 0)
+    following, err := r.query.FindPersonFollowing(ctx, person, 0)
     if err != nil {
         return nil, err
     }
 
-    user, err := mapper.PersonToUser(person)
+    user, err = mapper.PersonToUser(person)
     user.ID = uuid.New().String()
     user.Remote = true
     user.Remote = true
@@ -178,19 +171,16 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
 }
 
 func (r *UserRepoImpl) FindUserByActorId(ctx context.Context, actorId string) (*entity.UserEntity, error) {
-    var users []*entity.UserEntity = nil
-    err := r.db.Select(&users, "select * from users where actor_id=$1", actorId)
+    user, err := r.query.FindUserByActorId(ctx, actorId)
     if err != nil {
         return nil, err
     }
-
-    if users != nil {
-        return users[0], nil
+    
+    if user != nil {
+        return user, nil
     }
 
-    println(actorId)
-
-    person, err := r.apClient.GetUserByUrl(ctx, actorId)
+    person, err := r.query.FindPersonByActorId(ctx, actorId)
     if err != nil {
         return nil, err
     }
@@ -198,17 +188,17 @@ func (r *UserRepoImpl) FindUserByActorId(ctx context.Context, actorId string) (*
         return nil, nil
     }
 
-    followers, err := r.apClient.GetFollowersByUrl(ctx, person.Followers.GetLink().String(), 0)
+    followers, err := r.query.FindPersonFollowers(ctx, person, 0)
     if err != nil {
         return nil, err
     }
 
-    following, err := r.apClient.GetFollowingByUrl(ctx, person.Following.GetLink().String(), 0)
+    following, err := r.query.FindPersonFollowing(ctx, person, 0)
     if err != nil {
         return nil, err
     }
 
-    user, err := mapper.PersonToUser(person)
+    user, err = mapper.PersonToUser(person)
     user.ID = uuid.New().String()
     user.Remote = true
     user.Remote = true
@@ -227,58 +217,41 @@ func (r *UserRepoImpl) FindUserByActorId(ctx context.Context, actorId string) (*
 }
 
 func (r *UserRepoImpl) FindResource(ctx context.Context, resource string, domain string) (*entity.UserEntity, error) {
-    var users []*entity.UserEntity = nil
-    err := r.db.Select(&users, "select * from users where username||'@'||$1=$2", domain, resource)
+    user, err := r.query.FindUserByResourceName(ctx, resource, domain)
     if err != nil {
         return nil, err
     }
 
-    if users == nil {
-        return nil, nil
-    }
-
-    return users[0], nil
+    return user, nil
 }
 
 func (r *UserRepoImpl) FindUserByEmail(ctx context.Context, email string, domain string) (*entity.UserEntity, error) {
-    var users []*entity.UserEntity = nil
-    err := r.db.Select(&users, "select * from users where email=$1 and domain=$2", email, domain)
+    user, err := r.query.FindUserByEmail(ctx, email, domain)
     if err != nil {
         return nil, err
     }
 
-    if users == nil {
-        return nil, nil
-    }
-
-    return users[0], nil
+    return user, nil
 }
 
 func (r *UserRepoImpl) SearchUser(ctx context.Context, textSearch string, domain string) ([]*entity.UserEntity, error) {
-    var users []*entity.UserEntity = nil
-    textSearch = strings.ReplaceAll(textSearch, "%", "\\%")
-    textSearch = strings.ReplaceAll(textSearch, "_", "\\_")
-    err := r.db.Select(&users, "select * from users where (trim($1) <> '' and username ilike $1 || '%') and (trim($2) = '' or domain ilike $2 || '%') or (trim($1) <> '' and display_name ilike $1 || '%') limit 10", textSearch, domain)
-    if err != nil {
-        return nil, err
-    }
-
+    users, err := r.query.SearchUser(ctx, textSearch, domain)
     if users != nil {
         return users, nil
     }
 
-    person, err := r.apClient.FindUserByUsername(ctx, textSearch, domain)
+    person, err := r.query.FindPersonByUsername(ctx, textSearch, domain)
 
     if person == nil {
         return nil, nil
     }
 
-    followers, err := r.apClient.GetFollowersByUrl(ctx, person.Followers.GetLink().String(), 0)
+    followers, err := r.query.FindPersonFollowers(ctx, person, 0)
     if err != nil {
         return nil, err
     }
 
-    following, err := r.apClient.GetFollowingByUrl(ctx, person.Following.GetLink().String(), 0)
+    following, err := r.query.FindPersonFollowing(ctx, person, 0)
     if err != nil {
         return nil, err
     }
@@ -304,24 +277,7 @@ func (r *UserRepoImpl) SearchUser(ctx context.Context, textSearch string, domain
 }
 
 func (r *UserRepoImpl) CreateUser(ctx context.Context, user *entity.UserEntity) error {
-    _, err := r.db.Exec(
-        `
-        insert into users (
-            id, email, password_hash, status, username, display_name, name_prefix, name_suffix, 
-            bio, avatar, banner, attachment, tag, discoverable, auto_approve_follower, follower_count, following_count, 
-            public_key, private_key, actor_id, url, inbox_url, outbox_url, followers_url, following_url, Domain, remote, redirect_url, 
-            create_at, update_at
-        )
-        values
-        ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30)
-        `,
-        user.ID, user.Email, user.PasswordHash, user.Status, user.Username, user.Displayname,
-        user.NamePrefix, user.NameSuffix, user.Bio, user.Avatar, user.Banner, user.Attachment, user.Tag, user.Discoverable, 
-        user.AutoApproveFollower, user.FollowerCount, user.FollowingCount, user.PublicKey, user.PrivateKey, user.ActorId,
-        user.URL, user.InboxURL, user.OutboxURL, user.FollowersURL, user.FollowingURL, user.Domain, user.Remote, user.RedirectURL, 
-        user.CreateAt, user.UpdateAt,
-    )
-
+    err := r.command.CreateUser(ctx, user)
     if err != nil {
         return err
     }
@@ -330,22 +286,7 @@ func (r *UserRepoImpl) CreateUser(ctx context.Context, user *entity.UserEntity) 
 }
 
 func (r *UserRepoImpl) UpdateUser(ctx context.Context, user *entity.UserEntity) error {
-    _, err := r.db.Exec(
-        `
-        update users set 
-            display_name=$1, name_prefix=$2, name_suffix=$3, bio=$4, avatar=$5, banner=$6, 
-            discoverable=$7, auto_approve_follower=$8, attachment=$9, tag=$10, follower_count=$11, following_count=$12, 
-            url=$13, inbox_url=$14, outbox_url=$15, followers_url=$16, following_url=$17, 
-            preference=$18, update_at=$19, email=$20, password_hash=$21
-        where id = $22
-        `,
-        user.Displayname, user.NamePrefix, user.NameSuffix, user.Bio, user.Avatar, user.Banner, 
-        user.Discoverable, user.AutoApproveFollower, user.Attachment, user.Tag, user.FollowerCount, user.FollowingCount,
-        user.URL, user.InboxURL, user.OutboxURL, user.FollowersURL, user.FollowingURL,
-        user.Preference, user.UpdateAt, user.Email, user.PasswordHash,
-        user.ID,
-    )
-
+    err := r.command.UpdateUser(ctx, user)
     if err != nil {
         return err
     }
