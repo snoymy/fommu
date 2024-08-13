@@ -3,7 +3,7 @@ package usecase
 import (
 	"app/internal/core/entity"
 	"app/internal/application/activitypub/repo"
-	"app/internal/core/appstatus"
+	"app/internal/application/appstatus"
 	"app/internal/config"
 	"app/internal/log"
 	"context"

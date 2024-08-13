@@ -3,7 +3,7 @@ package controller
 import (
 	"app/internal/application/fommu/dto"
 	"app/internal/application/fommu/usecase"
-	"app/internal/core/appstatus"
+	"app/internal/application/appstatus"
 	"app/internal/log"
 	"app/internal/core/types"
 	"encoding/json"

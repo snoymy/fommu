@@ -2,7 +2,7 @@ package controller
 
 import (
 	"app/internal/application/activitypub/usecase"
-	"app/internal/core/appstatus"
+	"app/internal/application/appstatus"
 	"app/internal/config"
 	"app/internal/log"
 	"encoding/json"

@@ -3,7 +3,7 @@ package controller
 import (
 	"app/internal/adapter/mapper"
 	"app/internal/application/activitypub/usecase"
-	"app/internal/core/appstatus"
+	"app/internal/application/appstatus"
 	"app/internal/log"
 	"fmt"
 	"io"

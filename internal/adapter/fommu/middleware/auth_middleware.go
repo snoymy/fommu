@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"app/internal/application/fommu/usecase"
-	"app/internal/core/appstatus"
+	"app/internal/application/appstatus"
 	"app/internal/adapter/handler"
 	"app/internal/log"
 	"context"

@@ -5,7 +5,7 @@ import (
 	"app/internal/application/fommu/repo"
 	"app/internal/application/fommu/validator"
 	"app/internal/config"
-	"app/internal/core/appstatus"
+	"app/internal/application/appstatus"
 	"app/internal/log"
 	"context"
 	"html"

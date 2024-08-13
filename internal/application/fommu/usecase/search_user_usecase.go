@@ -3,7 +3,7 @@ package usecase
 import (
 	"app/internal/core/entity"
 	"app/internal/application/fommu/repo"
-	"app/internal/core/appstatus"
+	"app/internal/application/appstatus"
 	"app/internal/log"
 	"context"
 	"fmt"

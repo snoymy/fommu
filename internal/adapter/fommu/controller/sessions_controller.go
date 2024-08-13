@@ -2,7 +2,7 @@ package controller
 
 import (
 	"app/internal/application/fommu/usecase"
-	"app/internal/core/appstatus"
+	"app/internal/application/appstatus"
 	"app/internal/core/types"
 	"app/internal/log"
 	"app/internal/utils/requestutil"

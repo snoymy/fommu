@@ -4,7 +4,7 @@ import (
 	"app/internal/application/fommu/repo"
 	"app/internal/application/fommu/validator"
 	"app/internal/config"
-	"app/internal/core/appstatus"
+	"app/internal/application/appstatus"
 	"app/internal/core/entity"
 	"app/internal/core/types"
 	"app/internal/log"

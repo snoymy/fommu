@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"app/internal/core/appstatus"
+	"app/internal/application/appstatus"
 	"encoding/json"
 	"net/http"
 )

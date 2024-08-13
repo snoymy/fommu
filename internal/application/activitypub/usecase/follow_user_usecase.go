@@ -4,7 +4,7 @@ import (
 	"app/internal/adapter/mapper"
 	"app/internal/application/activitypub/repo"
 	"app/internal/config"
-	"app/internal/core/appstatus"
+	"app/internal/application/appstatus"
 	"app/internal/core/entity"
 	"app/internal/log"
 	"context"

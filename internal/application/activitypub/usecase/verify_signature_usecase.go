@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"app/internal/application/activitypub/repo"
-	"app/internal/core/appstatus"
+	"app/internal/application/appstatus"
 	"app/internal/config"
 	"context"
 	"crypto"
