@@ -3,7 +3,7 @@ package usecase
 import (
 	"app/internal/application/fommu/repo"
 	"app/internal/application/appstatus"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/log"
 	"context"
 )
@@ -17,7 +17,7 @@ func NewGetIdentityUsecase() *GetIdentityUsecase {
     return &GetIdentityUsecase{}
 }
 
-func (uc *GetIdentityUsecase) Exec(ctx context.Context, sessionId string) (*entity.UserEntity, error) {
+func (uc *GetIdentityUsecase) Exec(ctx context.Context, sessionId string) (*entities.UserEntity, error) {
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 
@@ -41,7 +41,7 @@ func (uc *GetIdentityUsecase) Exec(ctx context.Context, sessionId string) (*enti
     return user, nil
 }
 
-func (uc *GetIdentityUsecase) getSession(ctx context.Context, sessionId string) (*entity.SessionEntity, error) {
+func (uc *GetIdentityUsecase) getSession(ctx context.Context, sessionId string) (*entities.SessionEntity, error) {
     session, err := uc.sessionRepo.FindSessionByID(ctx, sessionId)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())
@@ -56,7 +56,7 @@ func (uc *GetIdentityUsecase) getSession(ctx context.Context, sessionId string) 
     return session, nil
 }
 
-func (uc *GetIdentityUsecase) getSessionOwner(ctx context.Context, ownerId string) (*entity.UserEntity, error) {
+func (uc *GetIdentityUsecase) getSessionOwner(ctx context.Context, ownerId string) (*entities.UserEntity, error) {
     user, err := uc.userRepo.FindUserByID(ctx, ownerId)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())

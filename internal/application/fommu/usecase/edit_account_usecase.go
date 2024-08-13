@@ -6,7 +6,7 @@ import (
 	"app/internal/application/fommu/validator"
 	"app/internal/config"
 	"app/internal/application/appstatus"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/log"
 	"app/internal/utils/passwordutil"
 	"context"
@@ -67,7 +67,7 @@ func (uc *EditAccountUsecase) Exec(ctx context.Context, username string, account
     return nil
 }
 
-func (uc *EditAccountUsecase) getUser(ctx context.Context, username string) (*entity.UserEntity, error) {
+func (uc *EditAccountUsecase) getUser(ctx context.Context, username string) (*entities.UserEntity, error) {
     user, err := uc.userRepo.FindUserByUsername(ctx, username, config.Fommu.Domain)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())
@@ -81,7 +81,7 @@ func (uc *EditAccountUsecase) getUser(ctx context.Context, username string) (*en
     return user, nil
 }
 
-func (uc *EditAccountUsecase) updateEmail(user *entity.UserEntity, password string, email string) error {
+func (uc *EditAccountUsecase) updateEmail(user *entities.UserEntity, password string, email string) error {
     if user == nil {
         return errors.New("user entity is nil")
     }
@@ -104,7 +104,7 @@ func (uc *EditAccountUsecase) updateEmail(user *entity.UserEntity, password stri
     return nil
 }
 
-func (uc *EditAccountUsecase) updatePassword(user *entity.UserEntity, password string, newPassword string) error {
+func (uc *EditAccountUsecase) updatePassword(user *entities.UserEntity, password string, newPassword string) error {
     if user == nil {
         return errors.New("user entity is nil")
     }

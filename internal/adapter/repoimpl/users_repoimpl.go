@@ -5,7 +5,7 @@ import (
 	"app/internal/adapter/mapper"
 	"app/internal/adapter/query"
 	"app/internal/config"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"context"
 	"reflect"
 	"time"
@@ -22,7 +22,7 @@ func NewUserRepoImpl() *UserRepoImpl {
     return &UserRepoImpl{}
 }
 
-func (r *UserRepoImpl) FindUserByID(ctx context.Context, id string) (*entity.UserEntity, error) {
+func (r *UserRepoImpl) FindUserByID(ctx context.Context, id string) (*entities.UserEntity, error) {
     user, err := r.query.FindUserById(ctx, id)
     if err != nil {
         return nil, err
@@ -31,7 +31,7 @@ func (r *UserRepoImpl) FindUserByID(ctx context.Context, id string) (*entity.Use
     return user, nil
 }
 
-func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, domain string) (*entity.UserEntity, error) {
+func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, domain string) (*entities.UserEntity, error) {
     if domain == "" {
         domain = config.Fommu.Domain
     }
@@ -170,7 +170,7 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
     return user, nil
 }
 
-func (r *UserRepoImpl) FindUserByActorId(ctx context.Context, actorId string) (*entity.UserEntity, error) {
+func (r *UserRepoImpl) FindUserByActorId(ctx context.Context, actorId string) (*entities.UserEntity, error) {
     user, err := r.query.FindUserByActorId(ctx, actorId)
     if err != nil {
         return nil, err
@@ -216,7 +216,7 @@ func (r *UserRepoImpl) FindUserByActorId(ctx context.Context, actorId string) (*
     return user, nil
 }
 
-func (r *UserRepoImpl) FindResource(ctx context.Context, resource string, domain string) (*entity.UserEntity, error) {
+func (r *UserRepoImpl) FindResource(ctx context.Context, resource string, domain string) (*entities.UserEntity, error) {
     user, err := r.query.FindUserByResourceName(ctx, resource, domain)
     if err != nil {
         return nil, err
@@ -225,7 +225,7 @@ func (r *UserRepoImpl) FindResource(ctx context.Context, resource string, domain
     return user, nil
 }
 
-func (r *UserRepoImpl) FindUserByEmail(ctx context.Context, email string, domain string) (*entity.UserEntity, error) {
+func (r *UserRepoImpl) FindUserByEmail(ctx context.Context, email string, domain string) (*entities.UserEntity, error) {
     user, err := r.query.FindUserByEmail(ctx, email, domain)
     if err != nil {
         return nil, err
@@ -234,7 +234,7 @@ func (r *UserRepoImpl) FindUserByEmail(ctx context.Context, email string, domain
     return user, nil
 }
 
-func (r *UserRepoImpl) SearchUser(ctx context.Context, textSearch string, domain string) ([]*entity.UserEntity, error) {
+func (r *UserRepoImpl) SearchUser(ctx context.Context, textSearch string, domain string) ([]*entities.UserEntity, error) {
     users, err := r.query.SearchUser(ctx, textSearch, domain)
     if users != nil {
         return users, nil
@@ -273,10 +273,10 @@ func (r *UserRepoImpl) SearchUser(ctx context.Context, textSearch string, domain
 
     go r.CreateUser(ctx, user)
 
-    return []*entity.UserEntity{user}, nil
+    return []*entities.UserEntity{user}, nil
 }
 
-func (r *UserRepoImpl) CreateUser(ctx context.Context, user *entity.UserEntity) error {
+func (r *UserRepoImpl) CreateUser(ctx context.Context, user *entities.UserEntity) error {
     err := r.command.CreateUser(ctx, user)
     if err != nil {
         return err
@@ -285,7 +285,7 @@ func (r *UserRepoImpl) CreateUser(ctx context.Context, user *entity.UserEntity) 
     return nil
 }
 
-func (r *UserRepoImpl) UpdateUser(ctx context.Context, user *entity.UserEntity) error {
+func (r *UserRepoImpl) UpdateUser(ctx context.Context, user *entities.UserEntity) error {
     err := r.command.UpdateUser(ctx, user)
     if err != nil {
         return err

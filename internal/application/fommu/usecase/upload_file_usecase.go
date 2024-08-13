@@ -3,7 +3,7 @@ package usecase
 import (
 	"app/internal/application/fommu/repo"
 	"app/internal/application/appstatus"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/core/types"
 	"app/internal/log"
 	"app/internal/utils/mimeutil"
@@ -22,7 +22,7 @@ func NewUploadFileUsecase() *UploadFileUsecase {
     return &UploadFileUsecase{}
 }
 
-func (uc *UploadFileUsecase) Exec(ctx context.Context, fileBytes []byte, originalFileName string, fileSize int64, mimeType string, uploader string) (*entity.MediaEntity, error) {
+func (uc *UploadFileUsecase) Exec(ctx context.Context, fileBytes []byte, originalFileName string, fileSize int64, mimeType string, uploader string) (*entities.MediaEntity, error) {
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 
@@ -60,7 +60,7 @@ func (uc *UploadFileUsecase) checkFile(ctx context.Context, file []byte, fileSiz
     return nil
 }
 
-func (uc *UploadFileUsecase) createMedia(ctx context.Context, file []byte, mimeType string, filename string, owner string) (*entity.MediaEntity, error) {
+func (uc *UploadFileUsecase) createMedia(ctx context.Context, file []byte, mimeType string, filename string, owner string) (*entities.MediaEntity, error) {
     log.Info(ctx, "Get file extension from mimeType")
     extension := mimeutil.GetExtensionFromMIME(mimeType)
     // generate uuid
@@ -78,7 +78,7 @@ func (uc *UploadFileUsecase) createMedia(ctx context.Context, file []byte, mimeT
     }
     // create media entity
     log.Info(ctx, "Create media entity")
-    media := entity.NewMediaEntity()
+    media := entities.NewMediaEntity()
     media.ID = id
     media.Url = fileUrl
     media.PreviewUrl.Set(fileUrl)

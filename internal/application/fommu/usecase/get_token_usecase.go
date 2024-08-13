@@ -3,7 +3,7 @@ package usecase
 import (
 	"app/internal/application/fommu/repo"
 	"app/internal/application/appstatus"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/log"
 	"context"
 	"time"
@@ -17,7 +17,7 @@ func NewGetTokenUsecase() *GetTokenUsecase {
     return &GetTokenUsecase{}
 }
 
-func (uc *GetTokenUsecase) Exec(ctx context.Context, sessionId string) (*entity.SessionEntity, error) {
+func (uc *GetTokenUsecase) Exec(ctx context.Context, sessionId string) (*entities.SessionEntity, error) {
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 
@@ -39,7 +39,7 @@ func (uc *GetTokenUsecase) Exec(ctx context.Context, sessionId string) (*entity.
     return session, nil
 }
 
-func (uc *GetTokenUsecase) getSession(ctx context.Context, sessionId string) (*entity.SessionEntity, error) {
+func (uc *GetTokenUsecase) getSession(ctx context.Context, sessionId string) (*entities.SessionEntity, error) {
     session, err := uc.sessionRepo.FindSessionByID(ctx, sessionId)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())
@@ -54,7 +54,7 @@ func (uc *GetTokenUsecase) getSession(ctx context.Context, sessionId string) (*e
     return session, nil
 }
 
-func (uc *GetTokenUsecase) isSessionExpired(ctx context.Context, session *entity.SessionEntity) bool {
+func (uc *GetTokenUsecase) isSessionExpired(ctx context.Context, session *entities.SessionEntity) bool {
     if session.RefreshExpireAt.Compare(time.Now().UTC()) <= -1 {
         log.Info(ctx, "Refresh token is expired")
         return true

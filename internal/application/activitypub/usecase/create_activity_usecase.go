@@ -4,7 +4,7 @@ import (
 	"app/internal/adapter/mapper"
 	"app/internal/application/activitypub/repo"
 	"app/internal/application/appstatus"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/log"
 	"context"
 	"slices"
@@ -82,13 +82,13 @@ func (uc *CreateActivityUsecase) validateActivity(ctx context.Context, activity 
     return nil
 }
 
-func (uc *CreateActivityUsecase) createActivity(ctx context.Context, activity *activitypub.Activity) (*entity.ActivityEntity, error) {
+func (uc *CreateActivityUsecase) createActivity(ctx context.Context, activity *activitypub.Activity) (*entities.ActivityEntity, error) {
     activityMap, err := mapper.StructToMap(activity)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())
         return nil, appstatus.InternalServerError("Something went wrong")
     }
-    activityEntity := entity.NewActiActivityEntity()
+    activityEntity := entities.NewActiActivityEntity()
     activityEntity.ID = uuid.New().String()
     activityEntity.Type.Set(string(activity.Type))
     activityEntity.Remote = true

@@ -1,7 +1,7 @@
 package mapper
 
 import (
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/core/types"
 	"app/internal/utils/mimeutil"
 	"app/internal/utils/stringutil"
@@ -14,9 +14,9 @@ import (
 	"github.com/snoymy/activitypub"
 )
 
-func PersonToUser(person *activitypub.Person) (*entity.UserEntity, error) {
+func PersonToUser(person *activitypub.Person) (*entities.UserEntity, error) {
     p := bluemonday.UGCPolicy()
-    user := entity.NewUserEntity()
+    user := entities.NewUserEntity()
 
     if person.ID.IsValid() { 
         if person.ID.IsLink() { 
@@ -76,7 +76,7 @@ func PersonToUser(person *activitypub.Person) (*entity.UserEntity, error) {
     return user, nil
 }
 
-func UserToPerson(user *entity.UserEntity) (*activitypub.Person, error) {
+func UserToPerson(user *entities.UserEntity) (*activitypub.Person, error) {
     if user == nil {
         return nil, errors.New("user is nil")
     }

@@ -3,7 +3,7 @@ package usecase
 import (
 	"app/internal/application/fommu/repo"
 	"app/internal/application/appstatus"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/log"
 	"context"
 	"time"
@@ -18,7 +18,7 @@ func NewAuthUsecase() *AuthUsecase {
     return &AuthUsecase{}
 }
 
-func (uc *AuthUsecase) Exec(ctx context.Context, sessionId string, accessToken string) (*entity.SessionEntity, error) {
+func (uc *AuthUsecase) Exec(ctx context.Context, sessionId string, accessToken string) (*entities.SessionEntity, error) {
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 

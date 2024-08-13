@@ -3,7 +3,7 @@ package usecase
 import (
 	"app/internal/application/fommu/repo"
 	"app/internal/application/appstatus"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/log"
 	"context"
 )
@@ -57,7 +57,7 @@ func (uc *RevokeSessionUsecase) Exec(ctx context.Context, currentSessionId strin
     return nil
 }
 
-func (uc *RevokeSessionUsecase) getSession(ctx context.Context, sessionId string) (*entity.SessionEntity, error) {
+func (uc *RevokeSessionUsecase) getSession(ctx context.Context, sessionId string) (*entities.SessionEntity, error) {
     session, err := uc.sessionRepo.FindSessionByID(ctx, sessionId)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())
@@ -72,7 +72,7 @@ func (uc *RevokeSessionUsecase) getSession(ctx context.Context, sessionId string
     return session, nil
 }
 
-func (uc *RevokeSessionUsecase) isSessionOwner(ownerSession *entity.SessionEntity, targetSession *entity.SessionEntity) bool {
+func (uc *RevokeSessionUsecase) isSessionOwner(ownerSession *entities.SessionEntity, targetSession *entities.SessionEntity) bool {
     if ownerSession.Owner == targetSession.Owner {
         return true
     }

@@ -3,7 +3,7 @@ package usecase
 import (
 	"app/internal/application/fommu/repo"
 	"app/internal/application/appstatus"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/log"
 	"context"
 	"path/filepath"
@@ -18,7 +18,7 @@ func NewGetFileUsecase() *GetFileUsecase {
     return &GetFileUsecase{}
 }
 
-func (uc *GetFileUsecase) Exec(ctx context.Context, filename string) ([]byte, *entity.MediaEntity, error) {
+func (uc *GetFileUsecase) Exec(ctx context.Context, filename string) ([]byte, *entities.MediaEntity, error) {
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 
@@ -40,7 +40,7 @@ func (uc *GetFileUsecase) Exec(ctx context.Context, filename string) ([]byte, *e
     return fileBytes, media, nil
 }
 
-func (uc *GetFileUsecase) getMedia(ctx context.Context, filename string) (*entity.MediaEntity, error) {
+func (uc *GetFileUsecase) getMedia(ctx context.Context, filename string) (*entities.MediaEntity, error) {
     log.Info(ctx, "Get media id")
     mediaId := strings.TrimSuffix(filepath.Base(filename), filepath.Ext(filename))
     log.Info(ctx, "Find media data")

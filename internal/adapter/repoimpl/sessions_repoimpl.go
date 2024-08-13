@@ -3,7 +3,7 @@ package repoimpl
 import (
 	"app/internal/adapter/command"
 	"app/internal/adapter/query"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"context"
 )
 
@@ -16,7 +16,7 @@ func NewSessionRepoImpl() *SessionsRepoImpl {
     return &SessionsRepoImpl{}
 }
 
-func (r *SessionsRepoImpl) CreateSession(ctx context.Context, session *entity.SessionEntity) error {
+func (r *SessionsRepoImpl) CreateSession(ctx context.Context, session *entities.SessionEntity) error {
     err := r.command.CreateSession(ctx, session)
     if err != nil {
         return err
@@ -25,7 +25,7 @@ func (r *SessionsRepoImpl) CreateSession(ctx context.Context, session *entity.Se
     return nil
 }
 
-func (r *SessionsRepoImpl) UpdateSession(ctx context.Context, session *entity.SessionEntity) error {
+func (r *SessionsRepoImpl) UpdateSession(ctx context.Context, session *entities.SessionEntity) error {
     err := r.command.UpdateSession(ctx, session)
     if err != nil {
         return err
@@ -34,7 +34,7 @@ func (r *SessionsRepoImpl) UpdateSession(ctx context.Context, session *entity.Se
     return nil
 }
 
-func (r *SessionsRepoImpl) FindSessionByID(ctx context.Context, id string) (*entity.SessionEntity, error) {
+func (r *SessionsRepoImpl) FindSessionByID(ctx context.Context, id string) (*entities.SessionEntity, error) {
     session, err := r.query.FindSessionById(ctx, id)
     if err != nil {
         return nil, err

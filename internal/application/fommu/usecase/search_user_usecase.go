@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/application/fommu/repo"
 	"app/internal/application/appstatus"
 	"app/internal/log"
@@ -17,7 +17,7 @@ func NewSearchUserUsecase() *SearchUserUsecase {
     return &SearchUserUsecase{}
 }
 
-func (uc *SearchUserUsecase) Exec(ctx context.Context, username string, domain string) ([]*entity.UserEntity, error) {
+func (uc *SearchUserUsecase) Exec(ctx context.Context, username string, domain string) ([]*entities.UserEntity, error) {
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 

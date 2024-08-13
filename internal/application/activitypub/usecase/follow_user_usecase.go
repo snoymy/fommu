@@ -5,7 +5,7 @@ import (
 	"app/internal/application/activitypub/repo"
 	"app/internal/config"
 	"app/internal/application/appstatus"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/log"
 	"context"
 	"net/url"
@@ -89,7 +89,7 @@ func (uc *ProcessFollowActivityUsecase) process(ctx context.Context, activity *a
     return nil
 }
 
-func (uc *ProcessFollowActivityUsecase) getActivity(ctx context.Context, activityId string) (*entity.ActivityEntity, error) {
+func (uc *ProcessFollowActivityUsecase) getActivity(ctx context.Context, activityId string) (*entities.ActivityEntity, error) {
     log.Debug(ctx, activityId)
     activityEntity, err := uc.activitiesRepo.FindActivityById(ctx, activityId) 
     if err != nil {
@@ -121,7 +121,7 @@ func (uc *ProcessFollowActivityUsecase) validateActivity(activity *activitypub.A
     return nil
 }
 
-func (uc *ProcessFollowActivityUsecase) getFollower(ctx context.Context, activity *activitypub.Activity) (*entity.UserEntity, error) {
+func (uc *ProcessFollowActivityUsecase) getFollower(ctx context.Context, activity *activitypub.Activity) (*entities.UserEntity, error) {
     followerId := activity.Actor.GetLink().String()
     follower, err := uc.userRepo.FindUserByActorId(ctx, followerId)
     if err != nil {
@@ -135,7 +135,7 @@ func (uc *ProcessFollowActivityUsecase) getFollower(ctx context.Context, activit
     return follower, nil
 }
 
-func (uc *ProcessFollowActivityUsecase) getTarget(ctx context.Context, activity *activitypub.Activity) (*entity.UserEntity, error) {
+func (uc *ProcessFollowActivityUsecase) getTarget(ctx context.Context, activity *activitypub.Activity) (*entities.UserEntity, error) {
     if !activity.Object.IsLink() {
         log.Warn(ctx, "Unsupport object type.")
         appstatus.BadValue("Unsupport object type.")
@@ -167,8 +167,8 @@ func (uc *ProcessFollowActivityUsecase) getTarget(ctx context.Context, activity 
     return target, nil
 }
 
-func (uc *ProcessFollowActivityUsecase) createFollow(follower *entity.UserEntity, target *entity.UserEntity, activityId string) *entity.FollowEntity {
-    following := entity.NewFollowEntity()
+func (uc *ProcessFollowActivityUsecase) createFollow(follower *entities.UserEntity, target *entities.UserEntity, activityId string) *entities.FollowEntity {
+    following := entities.NewFollowEntity()
     following.ID = uuid.New().String()
     following.Follower = follower.ID
     following.Following = target.ID

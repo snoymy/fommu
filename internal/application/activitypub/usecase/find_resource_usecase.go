@@ -4,7 +4,7 @@ import (
 	"app/internal/application/activitypub/repo"
 	"app/internal/config"
 	"app/internal/application/appstatus"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/log"
 	"context"
 	"strings"
@@ -18,7 +18,7 @@ func NewFindResourceUsecase() *FindResourceUsecase {
     return &FindResourceUsecase{}
 }
 
-func (uc *FindResourceUsecase) Exec(ctx context.Context, resource string) (*entity.UserEntity, error) {
+func (uc *FindResourceUsecase) Exec(ctx context.Context, resource string) (*entities.UserEntity, error) {
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 

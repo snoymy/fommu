@@ -1,13 +1,13 @@
 package repo
 
 import (
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"context"
 )
 
 type SessionsRepo interface {
-    FindSessionByID(ctx context.Context, id string) (*entity.SessionEntity, error)
-    CreateSession(ctx context.Context, session *entity.SessionEntity) error
-    UpdateSession(ctx context.Context, session *entity.SessionEntity) error
+    FindSessionByID(ctx context.Context, id string) (*entities.SessionEntity, error)
+    CreateSession(ctx context.Context, session *entities.SessionEntity) error
+    UpdateSession(ctx context.Context, session *entities.SessionEntity) error
     DeleteSession(ctx context.Context, id string) error
 }

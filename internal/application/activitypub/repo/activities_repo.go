@@ -1,13 +1,13 @@
 package repo
 
 import (
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"context"
 )
 
 type ActivitiesRepo interface {
-    FindActivityByActivityId(ctx context.Context, activityId string) (*entity.ActivityEntity, error)
-    FindActivityById(ctx context.Context, activityId string) (*entity.ActivityEntity, error)
-    CreateActivity(ctx context.Context, activity *entity.ActivityEntity) error
-    UpdateActivity(ctx context.Context, activity *entity.ActivityEntity) error
+    FindActivityByActivityId(ctx context.Context, activityId string) (*entities.ActivityEntity, error)
+    FindActivityById(ctx context.Context, activityId string) (*entities.ActivityEntity, error)
+    CreateActivity(ctx context.Context, activity *entities.ActivityEntity) error
+    UpdateActivity(ctx context.Context, activity *entities.ActivityEntity) error
 }

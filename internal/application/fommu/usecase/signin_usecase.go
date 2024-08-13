@@ -5,7 +5,7 @@ import (
 	"app/internal/application/fommu/validator"
 	"app/internal/config"
 	"app/internal/application/appstatus"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/core/types"
 	"app/internal/log"
 	"app/internal/utils/keygenutil"
@@ -25,7 +25,7 @@ func NewSigninUsecase() *SigninUsecase {
     return &SigninUsecase{}
 }
 
-func (uc *SigninUsecase) Exec(ctx context.Context, email string, password string, clientData types.JsonObject) (*entity.SessionEntity, error) {
+func (uc *SigninUsecase) Exec(ctx context.Context, email string, password string, clientData types.JsonObject) (*entities.SessionEntity, error) {
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 
@@ -60,7 +60,7 @@ func (uc *SigninUsecase) Exec(ctx context.Context, email string, password string
     return session, nil
 }
 
-func (uc *SigninUsecase) createSession(user *entity.UserEntity, clientData types.JsonObject) (*entity.SessionEntity, error) {
+func (uc *SigninUsecase) createSession(user *entities.UserEntity, clientData types.JsonObject) (*entities.SessionEntity, error) {
     accessToken, err := keygenutil.GenerateRandomKey(45)
     if err != nil {
         return nil, appstatus.InternalServerError(err.Error())
@@ -70,7 +70,7 @@ func (uc *SigninUsecase) createSession(user *entity.UserEntity, clientData types
         return nil, appstatus.InternalServerError(err.Error())
     }
 
-    session := entity.NewSessionEntity()
+    session := entities.NewSessionEntity()
     session.ID = uuid.New().String()
     session.AccessToken = accessToken
     session.AccessExpireAt = time.Now().UTC().Add(time.Minute * 15)
@@ -88,8 +88,8 @@ func (uc *SigninUsecase) createSession(user *entity.UserEntity, clientData types
     return session, nil
 }
 
-func (uc *SigninUsecase) getUserLogin(ctx context.Context, email string) (*entity.UserEntity, error) {
-    var user *entity.UserEntity
+func (uc *SigninUsecase) getUserLogin(ctx context.Context, email string) (*entities.UserEntity, error) {
+    var user *entities.UserEntity
     if err := validator.ValidateEmail(email); err == nil {
         var err error
         user, err = uc.userRepo.FindUserByEmail(ctx, email, config.Fommu.Domain)
@@ -111,7 +111,7 @@ func (uc *SigninUsecase) getUserLogin(ctx context.Context, email string) (*entit
     return user, nil
 }
 
-func (uc *SigninUsecase) isPasswordMatch(user *entity.UserEntity, password string) bool {
+func (uc *SigninUsecase) isPasswordMatch(user *entities.UserEntity, password string) bool {
     passwordHash := passwordutil.HashPassword(password)
     if user.PasswordHash.ValueOrZero() == passwordHash {
         return true

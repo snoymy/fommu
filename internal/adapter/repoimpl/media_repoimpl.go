@@ -1,7 +1,7 @@
 package repoimpl
 
 import (
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/config"
 	"context"
 	"net/url"
@@ -19,7 +19,7 @@ func NewMediaRepoImpl() *MediaRepoImpl {
     return &MediaRepoImpl{}
 }
 
-func (r *MediaRepoImpl) CreateMedia(ctx context.Context, media *entity.MediaEntity) error {
+func (r *MediaRepoImpl) CreateMedia(ctx context.Context, media *entities.MediaEntity) error {
     _, err := r.db.Exec(
         `
         insert into public.media
@@ -37,8 +37,8 @@ func (r *MediaRepoImpl) CreateMedia(ctx context.Context, media *entity.MediaEnti
     return nil
 }
 
-func (r *MediaRepoImpl) FindMediaByID(ctx context.Context, id string) (*entity.MediaEntity, error) {
-    var media []*entity.MediaEntity = nil
+func (r *MediaRepoImpl) FindMediaByID(ctx context.Context, id string) (*entities.MediaEntity, error) {
+    var media []*entities.MediaEntity = nil
     err := r.db.Select(&media, "select * from media where id=$1", id)
     if err != nil {
         return nil, err

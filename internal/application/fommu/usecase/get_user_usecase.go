@@ -3,7 +3,7 @@ package usecase
 import (
 	"app/internal/application/fommu/repo"
 	"app/internal/application/appstatus"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/log"
 	"context"
 	"fmt"
@@ -17,7 +17,7 @@ func NewGetUserUsecase() *GetUserUsecase {
     return &GetUserUsecase{}
 }
 
-func (uc *GetUserUsecase) Exec(ctx context.Context, username string, domain string) (*entity.UserEntity, error) {
+func (uc *GetUserUsecase) Exec(ctx context.Context, username string, domain string) (*entities.UserEntity, error) {
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 

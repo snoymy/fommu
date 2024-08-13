@@ -3,7 +3,7 @@ package usecase
 import (
 	"app/internal/application/fommu/repo"
 	"app/internal/application/appstatus"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/log"
 	"app/internal/utils/keygenutil"
 	"context"
@@ -18,7 +18,7 @@ func NewRefreshTokenUsecase() *RefreshTokenUsecase {
     return &RefreshTokenUsecase{}
 }
 
-func (uc *RefreshTokenUsecase) Exec(ctx context.Context, sessionId string, refreshToken string) (*entity.SessionEntity, error) {
+func (uc *RefreshTokenUsecase) Exec(ctx context.Context, sessionId string, refreshToken string) (*entities.SessionEntity, error) {
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 
@@ -47,7 +47,7 @@ func (uc *RefreshTokenUsecase) Exec(ctx context.Context, sessionId string, refre
     return session, nil
 }
 
-func (uc *RefreshTokenUsecase) getSession(ctx context.Context, sessionId string) (*entity.SessionEntity, error) {
+func (uc *RefreshTokenUsecase) getSession(ctx context.Context, sessionId string) (*entities.SessionEntity, error) {
     session, err := uc.sessionRepo.FindSessionByID(ctx, sessionId)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())
@@ -62,7 +62,7 @@ func (uc *RefreshTokenUsecase) getSession(ctx context.Context, sessionId string)
     return session, nil
 }
 
-func (uc *RefreshTokenUsecase) checkRefreshToken(ctx context.Context, session *entity.SessionEntity, refreshToken string) error {
+func (uc *RefreshTokenUsecase) checkRefreshToken(ctx context.Context, session *entities.SessionEntity, refreshToken string) error {
     log.Info(ctx, "Check refresh token")
     if session.RefreshToken != refreshToken {
         log.Info(ctx, "Refresh token is not match")
@@ -77,7 +77,7 @@ func (uc *RefreshTokenUsecase) checkRefreshToken(ctx context.Context, session *e
     return nil
 }
 
-func (uc *RefreshTokenUsecase) refreshSession(ctx context.Context, session *entity.SessionEntity) error {
+func (uc *RefreshTokenUsecase) refreshSession(ctx context.Context, session *entities.SessionEntity) error {
     log.Info(ctx, "Create new access token")
     newAccessToken, err := keygenutil.GenerateRandomKey(45)
     if err != nil {

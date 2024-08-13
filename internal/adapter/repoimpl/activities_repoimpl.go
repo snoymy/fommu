@@ -3,7 +3,7 @@ package repoimpl
 import (
 	"app/internal/adapter/command"
 	"app/internal/adapter/query"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"context"
 )
 
@@ -16,7 +16,7 @@ func NewActActivitiesRepoImpl() *ActivitiesRepoImpl {
     return &ActivitiesRepoImpl{}
 }
 
-func (r *ActivitiesRepoImpl) FindActivityByActivityId(ctx context.Context, activityId string) (*entity.ActivityEntity, error) {
+func (r *ActivitiesRepoImpl) FindActivityByActivityId(ctx context.Context, activityId string) (*entities.ActivityEntity, error) {
     activity, err := r.query.FindActivityByActivityId(ctx, activityId)
     if err != nil {
         return nil, err
@@ -25,7 +25,7 @@ func (r *ActivitiesRepoImpl) FindActivityByActivityId(ctx context.Context, activ
     return activity, nil
 }
 
-func (r *ActivitiesRepoImpl) FindActivityById(ctx context.Context, activityId string) (*entity.ActivityEntity, error) {
+func (r *ActivitiesRepoImpl) FindActivityById(ctx context.Context, activityId string) (*entities.ActivityEntity, error) {
     activity, err := r.query.FindActivityById(ctx, activityId)
     if err != nil {
         return nil, err
@@ -34,7 +34,7 @@ func (r *ActivitiesRepoImpl) FindActivityById(ctx context.Context, activityId st
     return activity, nil
 }
 
-func (r *ActivitiesRepoImpl) CreateActivity(ctx context.Context, activity *entity.ActivityEntity) error {
+func (r *ActivitiesRepoImpl) CreateActivity(ctx context.Context, activity *entities.ActivityEntity) error {
     err := r.command.CreateActivity(ctx, activity)
     if err != nil {
         return err
@@ -45,7 +45,7 @@ func (r *ActivitiesRepoImpl) CreateActivity(ctx context.Context, activity *entit
     return nil
 }
 
-func (r *ActivitiesRepoImpl) UpdateActivity(ctx context.Context, activity *entity.ActivityEntity) error {
+func (r *ActivitiesRepoImpl) UpdateActivity(ctx context.Context, activity *entities.ActivityEntity) error {
     err := r.command.UpdateActivity(ctx, activity)
     if err != nil {
         return err

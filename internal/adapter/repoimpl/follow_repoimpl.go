@@ -5,7 +5,7 @@ import (
 	"app/internal/adapter/mapper"
 	"app/internal/adapter/query"
 	"app/internal/config"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/log"
 	"context"
 	"net/url"
@@ -26,7 +26,7 @@ func NewFollowRepoImpl() *FollowRepoImpl {
     return &FollowRepoImpl{}
 }
 
-func (r *FollowRepoImpl) CreateFollow(ctx context.Context, follow *entity.FollowEntity) error {
+func (r *FollowRepoImpl) CreateFollow(ctx context.Context, follow *entities.FollowEntity) error {
     followsCount, err := r.query.CountFollows(ctx, follow) 
     if err != nil {
         return err
@@ -52,7 +52,7 @@ func (r *FollowRepoImpl) CreateFollow(ctx context.Context, follow *entity.Follow
     return nil
 }
 
-func (r *FollowRepoImpl) sendAcceptActivity(ctx context.Context, follow *entity.FollowEntity) error {
+func (r *FollowRepoImpl) sendAcceptActivity(ctx context.Context, follow *entities.FollowEntity) error {
     activityEnitity, err := r.query.FindActivityById(ctx, follow.ActivityId.ValueOrZero())
     if err != nil {
         return err
@@ -74,7 +74,7 @@ func (r *FollowRepoImpl) sendAcceptActivity(ctx context.Context, follow *entity.
     }
 
     log.Debug(ctx, "create activity")
-    acceptActivityEntity := entity.NewActiActivityEntity()
+    acceptActivityEntity := entities.NewActiActivityEntity()
     acceptActivityEntity.ID = entityId
     acceptActivityEntity.Type.Set(string(activitypub.AcceptType))
     acceptActivityEntity.Remote = false

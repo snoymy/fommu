@@ -5,7 +5,7 @@ import (
 	"app/internal/application/fommu/validator"
 	"app/internal/config"
 	"app/internal/application/appstatus"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/core/types"
 	"app/internal/log"
 	"app/internal/utils/keygenutil"
@@ -59,8 +59,8 @@ func (uc *SignupUsecase) Exec(ctx context.Context, email string, username string
     return nil
 }
 
-func (uc *SignupUsecase) createUser(email string, username string, password string) (*entity.UserEntity, error) {
-    user := entity.NewUserEntity()
+func (uc *SignupUsecase) createUser(email string, username string, password string) (*entities.UserEntity, error) {
+    user := entities.NewUserEntity()
     user.ID = uuid.New().String()
     user.Email.Set(email)
     user.Username = username

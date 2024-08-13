@@ -2,7 +2,7 @@ package usecase_test
 
 import (
 	"app/domain/usecase"
-	"app/internal/api/core/entity"
+	"app/internal/api/core/entities"
 	"app/internal/utils"
 	repository_mock "app/mock/repository"
 	"context"

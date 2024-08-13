@@ -2,7 +2,7 @@ package query
 
 import (
 	"app/internal/adapter/httpclient"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"context"
 	"strings"
 
@@ -19,8 +19,8 @@ func NewQuery() *Query {
     return &Query{}
 }
 
-func (q *Query) FindUserById(ctx context.Context, id string) (*entity.UserEntity, error) {
-    var users []*entity.UserEntity = nil
+func (q *Query) FindUserById(ctx context.Context, id string) (*entities.UserEntity, error) {
+    var users []*entities.UserEntity = nil
     err := q.db.Select(&users, "select * from users where id=$1", id)
     if err != nil {
         return nil, err
@@ -33,8 +33,8 @@ func (q *Query) FindUserById(ctx context.Context, id string) (*entity.UserEntity
     return users[0], nil
 }
 
-func (q *Query) SearchUser(ctx context.Context, textSearch string, domain string) ([]*entity.UserEntity, error) {
-    var users []*entity.UserEntity = nil
+func (q *Query) SearchUser(ctx context.Context, textSearch string, domain string) ([]*entities.UserEntity, error) {
+    var users []*entities.UserEntity = nil
     textSearch = strings.ReplaceAll(textSearch, "%", "\\%")
     textSearch = strings.ReplaceAll(textSearch, "_", "\\_")
     err := q.db.Select(&users, "select * from users where (trim($1) <> '' and username ilike $1 || '%') and (trim($2) = '' or domain ilike $2 || '%') or (trim($1) <> '' and display_name ilike $1 || '%') limit 10", textSearch, domain)
@@ -64,8 +64,8 @@ func (q *Query) FindPersonByActorId(ctx context.Context, url string) (*activityp
     return person, nil
 }
 
-func (q *Query) FindUserByUsername(ctx context.Context, username string, domain string) (*entity.UserEntity, error) {
-    var users []*entity.UserEntity = nil
+func (q *Query) FindUserByUsername(ctx context.Context, username string, domain string) (*entities.UserEntity, error) {
+    var users []*entities.UserEntity = nil
     err := q.db.Select(&users, "select * from users where username=$1 and domain=$2", username, domain)
     if err != nil {
         return nil, err
@@ -78,8 +78,8 @@ func (q *Query) FindUserByUsername(ctx context.Context, username string, domain 
     return users[0], nil
 }
 
-func (q *Query) FindUserByActorId(ctx context.Context, actorId string) (*entity.UserEntity, error) {
-    var users []*entity.UserEntity = nil
+func (q *Query) FindUserByActorId(ctx context.Context, actorId string) (*entities.UserEntity, error) {
+    var users []*entities.UserEntity = nil
     err := q.db.Select(&users, "select * from users where actor_id=$1", actorId)
     if err != nil {
         return nil, err
@@ -92,8 +92,8 @@ func (q *Query) FindUserByActorId(ctx context.Context, actorId string) (*entity.
     return users[0], nil
 }
 
-func (q *Query) FindUserByEmail(ctx context.Context, email string, domain string) (*entity.UserEntity, error) {
-    var users []*entity.UserEntity = nil
+func (q *Query) FindUserByEmail(ctx context.Context, email string, domain string) (*entities.UserEntity, error) {
+    var users []*entities.UserEntity = nil
     err := q.db.Select(&users, "select * from users where email=$1 and domain=$2", email, domain)
     if err != nil {
         return nil, err
@@ -106,8 +106,8 @@ func (q *Query) FindUserByEmail(ctx context.Context, email string, domain string
     return users[0], nil
 }
 
-func (q *Query) FindUserByResourceName(ctx context.Context, resource string, domain string) (*entity.UserEntity, error) {
-    var users []*entity.UserEntity = nil
+func (q *Query) FindUserByResourceName(ctx context.Context, resource string, domain string) (*entities.UserEntity, error) {
+    var users []*entities.UserEntity = nil
     err := q.db.Select(&users, "select * from users where username||'@'||$1=$2", domain, resource)
     if err != nil {
         return nil, err
@@ -197,8 +197,8 @@ func (q *Query) FindPersonFollowing(ctx context.Context, person *activitypub.Per
     return orderedCollection, nil
 }
 
-func (q *Query) FindSessionById(ctx context.Context, id string) (*entity.SessionEntity, error) {
-    var sessions []*entity.SessionEntity = nil
+func (q *Query) FindSessionById(ctx context.Context, id string) (*entities.SessionEntity, error) {
+    var sessions []*entities.SessionEntity = nil
     err := q.db.Select(&sessions, "select * from sessions where id=$1", id)
 
     if err != nil {
@@ -212,8 +212,8 @@ func (q *Query) FindSessionById(ctx context.Context, id string) (*entity.Session
     return sessions[0], nil
 }
 
-func (q *Query) FindActivityByActivityId(ctx context.Context, activityId string) (*entity.ActivityEntity, error) {
-    var activity []*entity.ActivityEntity = nil
+func (q *Query) FindActivityByActivityId(ctx context.Context, activityId string) (*entities.ActivityEntity, error) {
+    var activity []*entities.ActivityEntity = nil
     err := q.db.Select(&activity, "select * from activities where activity->>'id'::text = $1", activityId)
 
     if err != nil {
@@ -227,8 +227,8 @@ func (q *Query) FindActivityByActivityId(ctx context.Context, activityId string)
     return activity[0], nil
 }
 
-func (q *Query) FindActivityById(ctx context.Context, activityId string) (*entity.ActivityEntity, error) {
-    var activity []*entity.ActivityEntity = nil
+func (q *Query) FindActivityById(ctx context.Context, activityId string) (*entities.ActivityEntity, error) {
+    var activity []*entities.ActivityEntity = nil
     err := q.db.Select(&activity, "select * from activities where id = $1", activityId)
 
     if err != nil {
@@ -242,7 +242,7 @@ func (q *Query) FindActivityById(ctx context.Context, activityId string) (*entit
     return activity[0], nil
 }
 
-func (q *Query) CountFollows(ctx context.Context, follow *entity.FollowEntity) (int, error) {
+func (q *Query) CountFollows(ctx context.Context, follow *entities.FollowEntity) (int, error) {
     var rowsCount []int = nil
     err := q.db.Select(&rowsCount, "select count(*) from follows where follower = $1 and following = $2", follow.Follower, follow.Following)
     if err != nil {

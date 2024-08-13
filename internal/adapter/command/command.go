@@ -2,7 +2,7 @@ package command
 
 import (
 	"app/internal/adapter/httpclient"
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"context"
 	"fmt"
 
@@ -21,7 +21,7 @@ func NewCommand() *Command {
     return &Command{}
 }
 
-func (c *Command) CreateUser(ctx context.Context, user *entity.UserEntity) error {
+func (c *Command) CreateUser(ctx context.Context, user *entities.UserEntity) error {
     _, err := c.db.Exec(
         `
         insert into users (
@@ -47,7 +47,7 @@ func (c *Command) CreateUser(ctx context.Context, user *entity.UserEntity) error
     return nil
 }
 
-func (c *Command) UpdateUser(ctx context.Context, user *entity.UserEntity) error {
+func (c *Command) UpdateUser(ctx context.Context, user *entities.UserEntity) error {
     _, err := c.db.Exec(
         `
         update users set 
@@ -71,7 +71,7 @@ func (c *Command) UpdateUser(ctx context.Context, user *entity.UserEntity) error
     return nil
 }
 
-func (c *Command) CreateSession(ctx context.Context, session *entity.SessionEntity) error {
+func (c *Command) CreateSession(ctx context.Context, session *entities.SessionEntity) error {
     _, err := c.db.Exec(
         `
         insert into sessions (
@@ -92,7 +92,7 @@ func (c *Command) CreateSession(ctx context.Context, session *entity.SessionEnti
     return nil
 }
 
-func (c *Command) UpdateSession(ctx context.Context, session *entity.SessionEntity) error {
+func (c *Command) UpdateSession(ctx context.Context, session *entities.SessionEntity) error {
     _, err := c.db.Exec(
         `
         update sessions 
@@ -118,7 +118,7 @@ func (c *Command) DeleteSession(ctx context.Context, id string) error {
     return nil
 }
 
-func (c *Command) CreateActivity(ctx context.Context, activity *entity.ActivityEntity) error {
+func (c *Command) CreateActivity(ctx context.Context, activity *entities.ActivityEntity) error {
     _, err := c.db.Exec(
         `
         insert into activities (
@@ -137,7 +137,7 @@ func (c *Command) CreateActivity(ctx context.Context, activity *entity.ActivityE
     return nil
 }
 
-func (c *Command) UpdateActivity(ctx context.Context, activity *entity.ActivityEntity) error {
+func (c *Command) UpdateActivity(ctx context.Context, activity *entities.ActivityEntity) error {
     _, err := c.db.Exec(
         `
         update activities set type=$2, remote=$3, activity=$4, status=$5, create_at=$6, update_at=$7 where id=$1`,
@@ -151,7 +151,7 @@ func (c *Command) UpdateActivity(ctx context.Context, activity *entity.ActivityE
     return nil
 }
 
-func (c *Command) CreateFollow(ctx context.Context, follow *entity.FollowEntity) error {
+func (c *Command) CreateFollow(ctx context.Context, follow *entities.FollowEntity) error {
     _, err := c.db.Exec(
         `
         insert into follows (
@@ -169,7 +169,7 @@ func (c *Command) CreateFollow(ctx context.Context, follow *entity.FollowEntity)
     return nil
 }
 
-func (c *Command) AcceptFollow(ctx context.Context, follow *entity.FollowEntity) error {
+func (c *Command) AcceptFollow(ctx context.Context, follow *entities.FollowEntity) error {
     tx, err := c.db.Beginx()
     if err != nil {
         return err
@@ -222,6 +222,6 @@ func (c *Command) SendActivity(ctx context.Context, url string, privateKey strin
     return nil
 }
 
-func (c *Command) NotifyProcessActivity(ctx context.Context, activityEntity *entity.ActivityEntity) {
+func (c *Command) NotifyProcessActivity(ctx context.Context, activityEntity *entities.ActivityEntity) {
     c.bus.Publish("topic:process_activity", activityEntity.ID, activityEntity.Type.ValueOrZero())
 }

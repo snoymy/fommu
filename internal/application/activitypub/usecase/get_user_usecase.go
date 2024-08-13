@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"app/internal/core/entity"
+	"app/internal/core/entities"
 	"app/internal/application/activitypub/repo"
 	"app/internal/application/appstatus"
 	"app/internal/config"
@@ -17,7 +17,7 @@ func NewGetUserUsecase() *GetUserUsecase {
     return &GetUserUsecase{}
 }
 
-func (uc *GetUserUsecase) Exec(ctx context.Context, username string) (*entity.UserEntity, error) {
+func (uc *GetUserUsecase) Exec(ctx context.Context, username string) (*entities.UserEntity, error) {
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 
