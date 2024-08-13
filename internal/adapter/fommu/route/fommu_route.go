@@ -1,12 +1,12 @@
 package route
 
 import (
-	"app/internal/adapter/command"
+	"app/internal/adapter/commands"
 	"app/internal/adapter/fommu/controllers"
 	"app/internal/adapter/fommu/middlewares"
 	"app/internal/adapter/handler"
 	"app/internal/adapter/httpclient"
-	"app/internal/adapter/query"
+	"app/internal/adapter/queries"
 	"app/internal/adapter/repoimpl"
 	"app/internal/application/fommu/ports"
 	"app/internal/application/fommu/usecases"
@@ -32,8 +32,8 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient httpclient.ActivitypubClient)
     container.Register(func() *sqlx.DB { return db })
     container.Register(func() httpclient.ActivitypubClient { return apClient })
     container.Register(func() EventBus.Bus { return bus })
-    container.Register(query.NewQuery)
-    container.Register(command.NewCommand)
+    container.Register(queries.NewQuery)
+    container.Register(commands.NewCommand)
 
     // repo and adapter
     container.Register(func() ports.UsersRepo { return repoimpl.NewUserRepoImpl() })

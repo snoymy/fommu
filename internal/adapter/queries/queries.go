@@ -1,4 +1,4 @@
-package query
+package queries
 
 import (
 	"app/internal/adapter/httpclient"

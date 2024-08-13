@@ -1,15 +1,15 @@
 package repoimpl
 
 import (
-	"app/internal/adapter/command"
-	"app/internal/adapter/query"
+	"app/internal/adapter/commands"
+	"app/internal/adapter/queries"
 	"app/internal/core/entities"
 	"context"
 )
 
 type ActivitiesRepoImpl struct {
-    query *query.Query `injectable:""`
-    command *command.Command `injectable:""`
+    queries *queries.Query `injectable:""`
+    commands *commands.Command `injectable:""`
 }
 
 func NewActActivitiesRepoImpl() *ActivitiesRepoImpl {
@@ -17,7 +17,7 @@ func NewActActivitiesRepoImpl() *ActivitiesRepoImpl {
 }
 
 func (r *ActivitiesRepoImpl) FindActivityByActivityId(ctx context.Context, activityId string) (*entities.ActivityEntity, error) {
-    activity, err := r.query.FindActivityByActivityId(ctx, activityId)
+    activity, err := r.queries.FindActivityByActivityId(ctx, activityId)
     if err != nil {
         return nil, err
     }
@@ -26,7 +26,7 @@ func (r *ActivitiesRepoImpl) FindActivityByActivityId(ctx context.Context, activ
 }
 
 func (r *ActivitiesRepoImpl) FindActivityById(ctx context.Context, activityId string) (*entities.ActivityEntity, error) {
-    activity, err := r.query.FindActivityById(ctx, activityId)
+    activity, err := r.queries.FindActivityById(ctx, activityId)
     if err != nil {
         return nil, err
     }
@@ -35,18 +35,18 @@ func (r *ActivitiesRepoImpl) FindActivityById(ctx context.Context, activityId st
 }
 
 func (r *ActivitiesRepoImpl) CreateActivity(ctx context.Context, activity *entities.ActivityEntity) error {
-    err := r.command.CreateActivity(ctx, activity)
+    err := r.commands.CreateActivity(ctx, activity)
     if err != nil {
         return err
     }
 
-    r.command.NotifyProcessActivity(ctx, activity)
+    r.commands.NotifyProcessActivity(ctx, activity)
 
     return nil
 }
 
 func (r *ActivitiesRepoImpl) UpdateActivity(ctx context.Context, activity *entities.ActivityEntity) error {
-    err := r.command.UpdateActivity(ctx, activity)
+    err := r.commands.UpdateActivity(ctx, activity)
     if err != nil {
         return err
     }

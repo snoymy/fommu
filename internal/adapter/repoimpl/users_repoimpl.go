@@ -1,9 +1,9 @@
 package repoimpl
 
 import (
-	"app/internal/adapter/command"
+	"app/internal/adapter/commands"
 	"app/internal/adapter/mapper"
-	"app/internal/adapter/query"
+	"app/internal/adapter/queries"
 	"app/internal/config"
 	"app/internal/core/entities"
 	"context"
@@ -14,8 +14,8 @@ import (
 )
 
 type UserRepoImpl struct {
-    query *query.Query `injectable:""`
-    command *command.Command `injectable:""`
+    queries *queries.Query `injectable:""`
+    commands *commands.Command `injectable:""`
 }
 
 func NewUserRepoImpl() *UserRepoImpl {
@@ -23,7 +23,7 @@ func NewUserRepoImpl() *UserRepoImpl {
 }
 
 func (r *UserRepoImpl) FindUserByID(ctx context.Context, id string) (*entities.UserEntity, error) {
-    user, err := r.query.FindUserById(ctx, id)
+    user, err := r.queries.FindUserById(ctx, id)
     if err != nil {
         return nil, err
     }
@@ -36,7 +36,7 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
         domain = config.Fommu.Domain
     }
 
-    user, err := r.query.FindUserByUsername(ctx, username, domain)
+    user, err := r.queries.FindUserByUsername(ctx, username, domain)
     if err != nil {
         return nil, err
     }
@@ -50,7 +50,7 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
             return user, nil
         }
 
-        person, err := r.query.FindPersonByActorId(ctx, user.ActorId)
+        person, err := r.queries.FindPersonByActorId(ctx, user.ActorId)
         if err != nil {
             return user, err
         }
@@ -58,12 +58,12 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
             return user, nil
         }
 
-        followers, err := r.query.FindPersonFollowers(ctx, person, 0)
+        followers, err := r.queries.FindPersonFollowers(ctx, person, 0)
         if err != nil {
             return nil, err
         }
 
-        following, err := r.query.FindPersonFollowing(ctx, person, 0)
+        following, err := r.queries.FindPersonFollowing(ctx, person, 0)
         if err != nil {
             return nil, err
         }
@@ -135,18 +135,18 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
         return user, nil
     }
 
-    person, err := r.query.FindPersonByUsername(ctx, username, domain)
+    person, err := r.queries.FindPersonByUsername(ctx, username, domain)
 
     if person == nil {
         return nil, nil
     }
 
-    followers, err := r.query.FindPersonFollowers(ctx, person, 0)
+    followers, err := r.queries.FindPersonFollowers(ctx, person, 0)
     if err != nil {
         return nil, err
     }
 
-    following, err := r.query.FindPersonFollowing(ctx, person, 0)
+    following, err := r.queries.FindPersonFollowing(ctx, person, 0)
     if err != nil {
         return nil, err
     }
@@ -171,7 +171,7 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
 }
 
 func (r *UserRepoImpl) FindUserByActorId(ctx context.Context, actorId string) (*entities.UserEntity, error) {
-    user, err := r.query.FindUserByActorId(ctx, actorId)
+    user, err := r.queries.FindUserByActorId(ctx, actorId)
     if err != nil {
         return nil, err
     }
@@ -180,7 +180,7 @@ func (r *UserRepoImpl) FindUserByActorId(ctx context.Context, actorId string) (*
         return user, nil
     }
 
-    person, err := r.query.FindPersonByActorId(ctx, actorId)
+    person, err := r.queries.FindPersonByActorId(ctx, actorId)
     if err != nil {
         return nil, err
     }
@@ -188,12 +188,12 @@ func (r *UserRepoImpl) FindUserByActorId(ctx context.Context, actorId string) (*
         return nil, nil
     }
 
-    followers, err := r.query.FindPersonFollowers(ctx, person, 0)
+    followers, err := r.queries.FindPersonFollowers(ctx, person, 0)
     if err != nil {
         return nil, err
     }
 
-    following, err := r.query.FindPersonFollowing(ctx, person, 0)
+    following, err := r.queries.FindPersonFollowing(ctx, person, 0)
     if err != nil {
         return nil, err
     }
@@ -217,7 +217,7 @@ func (r *UserRepoImpl) FindUserByActorId(ctx context.Context, actorId string) (*
 }
 
 func (r *UserRepoImpl) FindResource(ctx context.Context, resource string, domain string) (*entities.UserEntity, error) {
-    user, err := r.query.FindUserByResourceName(ctx, resource, domain)
+    user, err := r.queries.FindUserByResourceName(ctx, resource, domain)
     if err != nil {
         return nil, err
     }
@@ -226,7 +226,7 @@ func (r *UserRepoImpl) FindResource(ctx context.Context, resource string, domain
 }
 
 func (r *UserRepoImpl) FindUserByEmail(ctx context.Context, email string, domain string) (*entities.UserEntity, error) {
-    user, err := r.query.FindUserByEmail(ctx, email, domain)
+    user, err := r.queries.FindUserByEmail(ctx, email, domain)
     if err != nil {
         return nil, err
     }
@@ -235,23 +235,23 @@ func (r *UserRepoImpl) FindUserByEmail(ctx context.Context, email string, domain
 }
 
 func (r *UserRepoImpl) SearchUser(ctx context.Context, textSearch string, domain string) ([]*entities.UserEntity, error) {
-    users, err := r.query.SearchUser(ctx, textSearch, domain)
+    users, err := r.queries.SearchUser(ctx, textSearch, domain)
     if users != nil {
         return users, nil
     }
 
-    person, err := r.query.FindPersonByUsername(ctx, textSearch, domain)
+    person, err := r.queries.FindPersonByUsername(ctx, textSearch, domain)
 
     if person == nil {
         return nil, nil
     }
 
-    followers, err := r.query.FindPersonFollowers(ctx, person, 0)
+    followers, err := r.queries.FindPersonFollowers(ctx, person, 0)
     if err != nil {
         return nil, err
     }
 
-    following, err := r.query.FindPersonFollowing(ctx, person, 0)
+    following, err := r.queries.FindPersonFollowing(ctx, person, 0)
     if err != nil {
         return nil, err
     }
@@ -277,7 +277,7 @@ func (r *UserRepoImpl) SearchUser(ctx context.Context, textSearch string, domain
 }
 
 func (r *UserRepoImpl) CreateUser(ctx context.Context, user *entities.UserEntity) error {
-    err := r.command.CreateUser(ctx, user)
+    err := r.commands.CreateUser(ctx, user)
     if err != nil {
         return err
     }
@@ -286,7 +286,7 @@ func (r *UserRepoImpl) CreateUser(ctx context.Context, user *entities.UserEntity
 }
 
 func (r *UserRepoImpl) UpdateUser(ctx context.Context, user *entities.UserEntity) error {
-    err := r.command.UpdateUser(ctx, user)
+    err := r.commands.UpdateUser(ctx, user)
     if err != nil {
         return err
     }
