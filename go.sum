@@ -1,5 +1,7 @@
 git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 h1:cliQ4HHsCo6xi2oWZYKWW4bly/Ory9FuTpFPRxj/mAg=
 git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078/go.mod h1:g/V2Hjas6Z1UHUp4yIx6bATpNzJ7DYtD0FG3+xARWxs=
+github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef h1:2JGTg6JapxP9/R33ZaagQtAM4EkkSYnIAlOG5EI8gkM=
+github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef/go.mod h1:JS7hed4L1fj0hXcyEejnW57/7LCetXggd+vwrRnYeII=
 github.com/aymerick/douceur v0.2.0 h1:Mv+mAeH1Q+n9Fr+oyamOlAkUNPWPlA8PPGR0QAaYuPk=
 github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd30/FjWUq4=
 github.com/cockroachdb/apd v1.1.0 h1:3LFP3629v+1aKXU5Q37mxmRxX/pIu1nijXydLShEq5I=

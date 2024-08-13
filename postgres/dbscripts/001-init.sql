@@ -65,11 +65,22 @@ CREATE TABLE IF NOT EXISTS media (
     update_at           TIMESTAMPTZ
 );
 
-CREATE TABLE IF NOT EXISTS following (
+CREATE TABLE IF NOT EXISTS activities (
+    id                  UUID PRIMARY KEY,
+    type                VARCHAR(255),
+    remote              BOOLEAN DEFAULT false,
+    activity            JSONB NOT NULL,
+    status              VARCHAR(255) NOT NULL,
+    create_at           TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    update_at           TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS follows (
     id                  UUID PRIMARY KEY,
     follower            UUID REFERENCES users(id) NOT NULL,
     following           UUID REFERENCES users(id) NOT NULL,
     status              VARCHAR(255) NOT NULL,
+    activity_id         UUID REFERENCES activities(id),
     create_at           TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     update_at           TIMESTAMPTZ,
     UNIQUE(follower, following)

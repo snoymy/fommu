@@ -211,3 +211,48 @@ func (q *Query) FindSessionById(ctx context.Context, id string) (*entity.Session
 
     return sessions[0], nil
 }
+
+func (q *Query) FindActivityByActivityId(ctx context.Context, activityId string) (*entity.ActivityEntity, error) {
+    var activity []*entity.ActivityEntity = nil
+    err := q.db.Select(&activity, "select * from activities where activity->>'id'::text = $1", activityId)
+
+    if err != nil {
+        return nil, err
+    }
+
+    if activity == nil {
+        return nil, nil
+    }
+
+    return activity[0], nil
+}
+
+func (q *Query) FindActivityById(ctx context.Context, activityId string) (*entity.ActivityEntity, error) {
+    var activity []*entity.ActivityEntity = nil
+    err := q.db.Select(&activity, "select * from activities where id = $1", activityId)
+
+    if err != nil {
+        return nil, err
+    }
+
+    if activity == nil {
+        return nil, nil
+    }
+
+    return activity[0], nil
+}
+
+func (q *Query) CountFollows(ctx context.Context, follow *entity.FollowEntity) (int, error) {
+    var rowsCount []int = nil
+    err := q.db.Select(&rowsCount, "select count(*) from follows where follower = $1 and following = $2", follow.Follower, follow.Following)
+    if err != nil {
+        return 0, err
+    }
+
+    if rowsCount == nil {
+        return 0, nil
+    }
+
+    return rowsCount[0], nil
+}
+

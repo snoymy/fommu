@@ -33,5 +33,6 @@ type ActivitypubClient interface {
 	// 
 	// FetchActivitypubOrderedCollectionPage retrieves an ActivityPub Ordered Collection Page object from the specified URL.
 	FetchOrderedCollectionPage(ctx context.Context, url string, page int) (*activitypub.OrderedCollectionPage, error)
+    PublishActivity(ctx context.Context, url string, privateKey string, keyId string, activity *activitypub.Activity) error
 }
 

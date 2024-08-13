@@ -5,16 +5,16 @@ import (
 	"time"
 )
 
-type FollowEntity struct {
+type ActivityEntity struct {
     ID                  string                              `db:"id"`
-    Follower            string                              `db:"follower"`
-    Following           string                              `db:"following"`
-    ActivityId          types.Nullable[string]              `db:"activity_id"`
+    Type                types.Nullable[string]              `db:"type"`              
+    Remote              bool                                `db:"remote"`
+    Activity            types.JsonObject                    `db:"activity"`
     Status              string                              `db:"status"`
     CreateAt            time.Time                           `db:"create_at"`
     UpdateAt            types.Nullable[time.Time]           `db:"update_at"`
 }
 
-func NewFollowEntity() *FollowEntity {
-    return &FollowEntity{}
+func NewActiActivityEntity() *ActivityEntity {
+    return &ActivityEntity{}
 }

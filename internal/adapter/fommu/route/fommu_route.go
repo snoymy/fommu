@@ -14,6 +14,7 @@ import (
 	"app/lib/di"
 	"context"
 
+	"github.com/asaskevich/EventBus"
 	"github.com/go-chi/chi/v5"
 	"github.com/jmoiron/sqlx"
 )
@@ -24,11 +25,13 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient httpclient.ActivitypubClient)
     log.EnterMethod(ctx)
     defer log.ExitMethod(ctx)
 
+    bus := EventBus.New()
     container := structdi.New()
 
     container.Register(func() chi.Router { return r })
     container.Register(func() *sqlx.DB { return db })
     container.Register(func() httpclient.ActivitypubClient { return apClient })
+    container.Register(func() EventBus.Bus { return bus })
     container.Register(query.NewQuery)
     container.Register(command.NewCommand)
 

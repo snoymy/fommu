@@ -52,6 +52,7 @@ var (
     BadLogin = NewAppStatus("invalid_login", http.StatusUnauthorized)
     NotFound = NewAppStatus("not_found", http.StatusNotFound)
     NotAccept = NewAppStatus("not_accept", http.StatusNotAcceptable)
+    NotSupport = NewAppStatus("not_support", http.StatusNotImplemented)
     InvalidToken = NewAppStatus("invalid_token", http.StatusUnauthorized)
     InvalidSession = NewAppStatus("invalid_session", http.StatusUnauthorized)
     InvalidCredential = NewAppStatus("invalid_credential", http.StatusUnauthorized)

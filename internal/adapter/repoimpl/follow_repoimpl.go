@@ -1,78 +1,115 @@
 package repoimpl
 
 import (
+	"app/internal/adapter/command"
+	"app/internal/adapter/mapper"
+	"app/internal/adapter/query"
+	"app/internal/config"
 	"app/internal/core/entity"
+	"app/internal/log"
 	"context"
+	"net/url"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/snoymy/activitypub"
 )
 
 type FollowRepoImpl struct {
-    db *sqlx.DB `injectable:""`
+    db *sqlx.DB                 `injectable:""`
+    query *query.Query          `injectable:""`
+    command *command.Command    `injectable:""`
 }
 
 func NewFollowRepoImpl() *FollowRepoImpl {
     return &FollowRepoImpl{}
 }
 
-func (r *FollowRepoImpl) CreateFollowing(ctx context.Context, following *entity.FollowEntity) error {
-    var rowsCount []int = nil
-    err := r.db.Select(&rowsCount, "select count(*) from following where follower = $1 and following = $2", following.Follower, following.Following)
+func (r *FollowRepoImpl) CreateFollow(ctx context.Context, follow *entity.FollowEntity) error {
+    followsCount, err := r.query.CountFollows(ctx, follow) 
     if err != nil {
         return err
     }
-
-    if rowsCount != nil && rowsCount[0] > 0 {
+    if followsCount > 0 {
         return nil
     }
 
-    tx, err := r.db.Beginx()
-    if err != nil {
-        return err
-    }
-    defer func() {
-        if err != nil {
-            tx.Rollback()
-            return
-        }
-    }()
-
-    _, err = tx.Exec(
-        `
-        insert into following (
-            id, follower, following, status, create_at, update_at
-        )
-        values ($1,$2,$3,$4,$5,$6)
-        `,
-        following.ID, following.Follower, following.Following, following.Status, following.CreateAt, following.UpdateAt,
-    )
-    if err != nil {
+    pendingFollow := *follow
+    pendingFollow.Status = "pending"
+    if err := r.command.CreateFollow(ctx, &pendingFollow); err != nil {
         return err
     }
 
-    if following.Status == "followed" {
-        _, err = tx.Exec(
-            `update users set follower_count = follower_count + 1 where id = $1`,
-            following.Following,
-        )
+    if follow.Status == "followed" {
+        err := r.command.AcceptFollow(ctx, follow)
         if err != nil {
             return err
         }
-
-        _, err = tx.Exec(
-            `update users set following_count = following_count + 1 where id = $1`,
-            following.Follower,
-        )
-        if err != nil {
-            return err
-        }
-
-        // add activity object
-        //go sent accept
+        go r.sendAcceptActivity(ctx, follow)
     }
 
-    err = tx.Commit()
+    return nil
+}
+
+func (r *FollowRepoImpl) sendAcceptActivity(ctx context.Context, follow *entity.FollowEntity) error {
+    activityEnitity, err := r.query.FindActivityById(ctx, follow.ActivityId.ValueOrZero())
     if err != nil {
+        return err
+    }
+
+    entityId := uuid.New().String()
+    acceptActivityId, err := url.JoinPath(config.Fommu.URL, "activities/accept", entityId)
+
+    activity, err := mapper.MapToStruct[activitypub.Activity](activityEnitity.Activity)
+    if err != nil {
+        return err
+    }
+    acceptActivity := activitypub.AcceptNew(activitypub.IRI(acceptActivityId), activity)
+    acceptActivity.Actor = activity.Object.GetLink()
+
+    activityMap, err := mapper.StructToMap(acceptActivity)
+    if err != nil {
+        return err
+    }
+
+    log.Debug(ctx, "create activity")
+    acceptActivityEntity := entity.NewActiActivityEntity()
+    acceptActivityEntity.ID = entityId
+    acceptActivityEntity.Type.Set(string(activitypub.AcceptType))
+    acceptActivityEntity.Remote = false
+    acceptActivityEntity.Activity = activityMap
+    acceptActivityEntity.Status = "pending"
+    acceptActivityEntity.CreateAt = time.Now().UTC()
+    if err := r.command.CreateActivity(ctx, acceptActivityEntity); err != nil {
+        return err
+    }
+    log.Debug(ctx, "send activity")
+
+    targetUrl, err := url.JoinPath(string(activity.Actor.GetLink()), "inbox")
+    if err != nil {
+        return err
+    }
+
+    following, err := r.query.FindUserById(ctx, follow.Following)
+    if err != nil {
+        return err
+    }
+
+    keyId := following.ActorId + "#main-key"
+    privateKey := following.PrivateKey.ValueOrZero()
+    if err := r.command.SendActivity(ctx, targetUrl, privateKey, keyId, acceptActivity); err != nil {
+        acceptActivityEntity.Status = "failed"
+        if err := r.command.UpdateActivity(ctx, acceptActivityEntity); err != nil {
+            return err
+        }
+
+        return err
+    }
+
+    acceptActivityEntity.Status = "succeed"
+    acceptActivityEntity.UpdateAt.Set(time.Now().UTC())
+    if err := r.command.UpdateActivity(ctx, acceptActivityEntity); err != nil {
         return err
     }
 

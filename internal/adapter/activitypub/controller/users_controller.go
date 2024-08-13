@@ -5,7 +5,6 @@ import (
 	"app/internal/application/activitypub/usecase"
 	"app/internal/core/appstatus"
 	"app/internal/log"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -18,8 +17,9 @@ import (
 )
 
 type APUsersController struct {
-    getUser    *usecase.GetUserUsecase    `injectable:""`
-    followUser *usecase.FollowUserUsecase `injectable:""`
+    getUser         *usecase.GetUserUsecase         `injectable:""`
+    followUser      *usecase.ProcessFollowActivityUsecase      `injectable:""`
+    createActivity  *usecase.CreateActivityUsecase  `injectable:""`
 }
 
 func NewAPUsersController() *APUsersController {
@@ -94,28 +94,18 @@ func (f *APUsersController) Inbox(w http.ResponseWriter, r *http.Request) error 
     }
     fmt.Printf("\n\nInbox: %s\n", body)
 
-    activity := &activitypub.Activity{}
-    err = json.Unmarshal(body, &activity)
-    if err != nil {
+    activity, err := mapper.JsonToActivity(string(body))
+    if err := f.createActivity.Exec(r.Context(), activity); err != nil {
+        log.Info(r.Context(), "Response with Error: " + err.Error())
         return err
     }
 
-    var tagScheme struct {
-        Tag []*activitypub.Object `json:"tag"`
-    }
-    err = json.Unmarshal(body, &tagScheme)
-    if err != nil {
-        return err
-    }
+    // switch activity.Type {
+    //     case activitypub.FollowType: 
+    //         f.followUser.Exec(r.Context(), activity)
+    // }
 
-    for _, item := range tagScheme.Tag {
-        activity.Tag.Append(item)
-    }
-
-    switch activity.Type {
-        case activitypub.FollowType: 
-            f.followUser.Exec(r.Context(), activity)
-    }
+    w.WriteHeader(http.StatusAccepted)
 
     return nil
 }

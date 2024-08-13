@@ -6,5 +6,5 @@ import (
 )
 
 type FollowRepo interface {
-    CreateFollowing(ctx context.Context, following *entity.FollowEntity) error
+    CreateFollow(ctx context.Context, following *entity.FollowEntity) error
 }

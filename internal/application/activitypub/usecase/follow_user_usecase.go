@@ -1,10 +1,12 @@
 package usecase
 
 import (
+	"app/internal/adapter/mapper"
 	"app/internal/application/activitypub/repo"
 	"app/internal/config"
 	"app/internal/core/appstatus"
 	"app/internal/core/entity"
+	"app/internal/log"
 	"context"
 	"net/url"
 	"path"
@@ -15,41 +17,95 @@ import (
 	"github.com/snoymy/activitypub"
 )
 
-type FollowUserUsecase struct {
-    userRepo      repo.UsersRepo     `injectable:""`
-    followingRepo repo.FollowRepo `injectable:""`
+type ProcessFollowActivityUsecase struct {
+    userRepo        repo.UsersRepo          `injectable:""`
+    followingRepo   repo.FollowRepo         `injectable:""`
+    activitiesRepo  repo.ActivitiesRepo     `injectable:""`
 }
 
-func NewFollowUserUsecase() *FollowUserUsecase {
-    return &FollowUserUsecase{}
+func NewProcessFollowActivityUsecase() *ProcessFollowActivityUsecase {
+    return &ProcessFollowActivityUsecase{}
 }
 
-func (uc *FollowUserUsecase) Exec(ctx context.Context, activity *activitypub.Activity) error {
-    if err := uc.validateActivity(activity); err != nil {
-        return err
-    }
+func (uc *ProcessFollowActivityUsecase) Exec(ctx context.Context, activityId string) error {
+    log.EnterMethod(ctx)
+    defer log.ExitMethod(ctx)
 
-    follower, err := uc.getFollower(ctx, activity)
+    activityEntity, err := uc.getActivity(ctx, activityId)
     if err != nil {
         return err
     }
 
-    target, err := uc.getTarget(ctx, activity)
+    activity, err := mapper.MapToStruct[activitypub.Activity](activityEntity.Activity)
     if err != nil {
-        return err
+        log.Error(ctx, "Error: " + err.Error())
+        return appstatus.InternalServerError("Something went wrong")
     }
+    
+    err = uc.process(ctx, activity, activityId)
+    if err != nil {
+        log.Debug(ctx, err.Error())
+        activityEntity.Status = "failed"
+    } else {
+        log.Debug(ctx, "Succeed")
+        activityEntity.Status = "succeed"
+    }
+    activityEntity.UpdateAt.Set(time.Now().UTC())
 
-    following := uc.createFollow(follower, target)
-
-    // insert data to db
-    if err := uc.followingRepo.CreateFollowing(ctx, following); err != nil {
+    if err := uc.activitiesRepo.UpdateActivity(ctx, activityEntity); err != nil {
+        log.Error(ctx, "Error: " + err.Error())
         return err
     }
 
     return nil
 }
 
-func (uc *FollowUserUsecase) validateActivity(activity *activitypub.Activity) error {
+func (uc *ProcessFollowActivityUsecase) process(ctx context.Context, activity *activitypub.Activity, activityId string) error {
+    if err := uc.validateActivity(activity); err != nil {
+        return err
+    }
+
+    log.Info(ctx, "Get follower")
+    follower, err := uc.getFollower(ctx, activity)
+    if err != nil {
+        return err
+    }
+
+    log.Info(ctx, "Get Target")
+    target, err := uc.getTarget(ctx, activity)
+    if err != nil {
+        return err
+    }
+
+    log.Info(ctx, "Create Follow Entity")
+    follow := uc.createFollow(follower, target, activityId)
+
+    // insert data to db
+    log.Info(ctx, "Save Follow to db")
+    if err := uc.followingRepo.CreateFollow(ctx, follow); err != nil {
+        return err
+    }
+
+    return nil
+}
+
+func (uc *ProcessFollowActivityUsecase) getActivity(ctx context.Context, activityId string) (*entity.ActivityEntity, error) {
+    log.Debug(ctx, activityId)
+    activityEntity, err := uc.activitiesRepo.FindActivityById(ctx, activityId) 
+    if err != nil {
+        log.Error(ctx, "Error: " + err.Error())
+        return nil, appstatus.InternalServerError("Something went wrong")
+    }
+
+    if activityEntity == nil {
+        log.Warn(ctx, "Activity not found")
+        return nil, appstatus.NotFound("Activity not found")
+    }
+
+    return activityEntity, nil
+}
+
+func (uc *ProcessFollowActivityUsecase) validateActivity(activity *activitypub.Activity) error {
     if activity == nil {
         return appstatus.BadValue("Invalid activity.")
     }
@@ -65,31 +121,35 @@ func (uc *FollowUserUsecase) validateActivity(activity *activitypub.Activity) er
     return nil
 }
 
-func (uc *FollowUserUsecase) getFollower(ctx context.Context, activity *activitypub.Activity) (*entity.UserEntity, error) {
+func (uc *ProcessFollowActivityUsecase) getFollower(ctx context.Context, activity *activitypub.Activity) (*entity.UserEntity, error) {
     followerId := activity.Actor.GetLink().String()
     follower, err := uc.userRepo.FindUserByActorId(ctx, followerId)
     if err != nil {
         return nil, err
     }
     if follower == nil {
+        log.Warn(ctx, "Follower not found")
         return nil, appstatus.NotFound("Follower not found.")
     }
 
     return follower, nil
 }
 
-func (uc *FollowUserUsecase) getTarget(ctx context.Context, activity *activitypub.Activity) (*entity.UserEntity, error) {
+func (uc *ProcessFollowActivityUsecase) getTarget(ctx context.Context, activity *activitypub.Activity) (*entity.UserEntity, error) {
     if !activity.Object.IsLink() {
+        log.Warn(ctx, "Unsupport object type.")
         appstatus.BadValue("Unsupport object type.")
     }
     targetId := activity.Object.GetLink().String()
 
     parsedUrl, err := url.Parse(targetId)
     if err != nil {
+        log.Warn(ctx, "Invalid following ID.")
         return nil, appstatus.BadValue("Invalid following ID.")
     }
 
     if strings.TrimPrefix(parsedUrl.Hostname(), "www.") != config.Fommu.Domain {
+        log.Warn(ctx, "Invalid following ID.")
         return nil, appstatus.BadValue("Invalid following ID.")
     }
 
@@ -100,13 +160,14 @@ func (uc *FollowUserUsecase) getTarget(ctx context.Context, activity *activitypu
     }
 
     if target == nil {
+        log.Warn(ctx, "Target user not found")
         return nil, appstatus.NotFound("Target user not found.")
     }
 
     return target, nil
 }
 
-func (uc *FollowUserUsecase) createFollow(follower *entity.UserEntity, target *entity.UserEntity) *entity.FollowEntity {
+func (uc *ProcessFollowActivityUsecase) createFollow(follower *entity.UserEntity, target *entity.UserEntity, activityId string) *entity.FollowEntity {
     following := entity.NewFollowEntity()
     following.ID = uuid.New().String()
     following.Follower = follower.ID
@@ -115,6 +176,9 @@ func (uc *FollowUserUsecase) createFollow(follower *entity.UserEntity, target *e
         following.Status = "followed"
     } else {
         following.Status = "pending"
+    }
+    if activityId != "" {
+        following.ActivityId.Set(activityId)
     }
     following.CreateAt = time.Now().UTC()
 
