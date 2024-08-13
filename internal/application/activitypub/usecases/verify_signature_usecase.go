@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	"app/internal/application/activitypub/repo"
+	"app/internal/application/activitypub/ports"
 	"app/internal/application/appstatus"
 	"app/internal/config"
 	"context"
@@ -18,7 +18,7 @@ import (
 )
 
 type VerifySignatureUsecase struct {
-	userRepo repo.UsersRepo `injectable:""`
+	userRepo ports.UsersRepo `injectable:""`
 }
 
 func NewVerifySignatureUsecase() *VerifySignatureUsecase {

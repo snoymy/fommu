@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	"app/internal/application/fommu/repo"
+	"app/internal/application/fommu/ports"
 	"app/internal/application/appstatus"
 	"app/internal/core/entities"
 	"app/internal/log"
@@ -10,7 +10,7 @@ import (
 )
 
 type GetUserUsecase struct {
-    userRepo repo.UsersRepo `injectable:""`
+    userRepo ports.UsersRepo `injectable:""`
 }
 
 func NewGetUserUsecase() *GetUserUsecase {

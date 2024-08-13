@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	"app/internal/application/fommu/repo"
+	"app/internal/application/fommu/ports"
 	"app/internal/application/fommu/validator"
 	"app/internal/config"
 	"app/internal/application/appstatus"
@@ -18,7 +18,7 @@ import (
 )
 
 type SignupUsecase struct {
-    userRepository repo.UsersRepo `injectable:""`
+    userRepository ports.UsersRepo `injectable:""`
 }
 
 func NewSignupUsecase() *SignupUsecase {

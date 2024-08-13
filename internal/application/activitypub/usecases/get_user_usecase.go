@@ -2,7 +2,7 @@ package usecases
 
 import (
 	"app/internal/core/entities"
-	"app/internal/application/activitypub/repo"
+	"app/internal/application/activitypub/ports"
 	"app/internal/application/appstatus"
 	"app/internal/config"
 	"app/internal/log"
@@ -10,7 +10,7 @@ import (
 )
 
 type GetUserUsecase struct {
-    userRepo repo.UsersRepo `injectable:""`
+    userRepo ports.UsersRepo `injectable:""`
 }
 
 func NewGetUserUsecase() *GetUserUsecase {

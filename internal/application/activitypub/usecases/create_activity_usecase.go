@@ -2,7 +2,7 @@ package usecases
 
 import (
 	"app/internal/adapter/mapper"
-	"app/internal/application/activitypub/repo"
+	"app/internal/application/activitypub/ports"
 	"app/internal/application/appstatus"
 	"app/internal/core/entities"
 	"app/internal/log"
@@ -15,7 +15,7 @@ import (
 )
 
 type CreateActivityUsecase struct {
-    activitiesRepo repo.ActivitiesRepo `injectable:""`
+    activitiesRepo ports.ActivitiesRepo `injectable:""`
 }
 
 func NewCreateActivityUsecase() *CreateActivityUsecase {

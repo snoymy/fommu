@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	"app/internal/application/fommu/repo"
+	"app/internal/application/fommu/ports"
 	"app/internal/application/appstatus"
 	"app/internal/core/entities"
 	"app/internal/log"
@@ -11,7 +11,7 @@ import (
 )
 
 type GetFileUsecase struct {
-    mediaRepo repo.MediaRepo `injectable:""`
+    mediaRepo ports.MediaRepo `injectable:""`
 }
 
 func NewGetFileUsecase() *GetFileUsecase {

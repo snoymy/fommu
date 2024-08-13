@@ -8,7 +8,7 @@ import (
 	"app/internal/adapter/httpclient"
 	"app/internal/adapter/query"
 	"app/internal/adapter/repoimpl"
-	"app/internal/application/fommu/repo"
+	"app/internal/application/fommu/ports"
 	"app/internal/application/fommu/usecases"
 	"app/internal/log"
 	"app/lib/di"
@@ -36,9 +36,9 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient httpclient.ActivitypubClient)
     container.Register(command.NewCommand)
 
     // repo and adapter
-    container.Register(func() repo.UsersRepo { return repoimpl.NewUserRepoImpl() })
-    container.Register(func() repo.SessionsRepo { return repoimpl.NewSessionRepoImpl() })
-    container.Register(func() repo.MediaRepo { return repoimpl.NewMediaRepoImpl() })
+    container.Register(func() ports.UsersRepo { return repoimpl.NewUserRepoImpl() })
+    container.Register(func() ports.SessionsRepo { return repoimpl.NewSessionRepoImpl() })
+    container.Register(func() ports.MediaRepo { return repoimpl.NewMediaRepoImpl() })
 
     // usecase
     container.Register(usecases.NewAuthUsecase)

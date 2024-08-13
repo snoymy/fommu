@@ -2,7 +2,7 @@ package usecases
 
 import (
 	"app/internal/adapter/mapper"
-	"app/internal/application/activitypub/repo"
+	"app/internal/application/activitypub/ports"
 	"app/internal/config"
 	"app/internal/application/appstatus"
 	"app/internal/core/entities"
@@ -18,9 +18,9 @@ import (
 )
 
 type ProcessFollowActivityUsecase struct {
-    userRepo        repo.UsersRepo          `injectable:""`
-    followingRepo   repo.FollowRepo         `injectable:""`
-    activitiesRepo  repo.ActivitiesRepo     `injectable:""`
+    userRepo        ports.UsersRepo          `injectable:""`
+    followingRepo   ports.FollowRepo         `injectable:""`
+    activitiesRepo  ports.ActivitiesRepo     `injectable:""`
 }
 
 func NewProcessFollowActivityUsecase() *ProcessFollowActivityUsecase {

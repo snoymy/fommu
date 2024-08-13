@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	"app/internal/application/fommu/repo"
+	"app/internal/application/fommu/ports"
 	"app/internal/application/appstatus"
 	"app/internal/core/entities"
 	"app/internal/log"
@@ -9,8 +9,8 @@ import (
 )
 
 type GetIdentityUsecase struct {
-    sessionRepo repo.SessionsRepo `injectable:""`
-    userRepo    repo.UsersRepo    `injectable:""`
+    sessionRepo ports.SessionsRepo `injectable:""`
+    userRepo    ports.UsersRepo    `injectable:""`
 }
 
 func NewGetIdentityUsecase() *GetIdentityUsecase {
