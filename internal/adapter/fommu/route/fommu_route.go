@@ -2,7 +2,7 @@ package route
 
 import (
 	"app/internal/adapter/command"
-	"app/internal/adapter/fommu/controller"
+	"app/internal/adapter/fommu/controllers"
 	"app/internal/adapter/fommu/middleware"
 	"app/internal/adapter/handler"
 	"app/internal/adapter/httpclient"
@@ -65,9 +65,9 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient httpclient.ActivitypubClient)
     // controller and middleware
     container.Register(middleware.NewRequestIDMiddleware)
     container.Register(middleware.NewAuthMiddleware)
-    container.Register(controller.NewUsersController)
-    container.Register(controller.NewSessionsController)
-    container.Register(controller.NewMediaController)
+    container.Register(controllers.NewUsersController)
+    container.Register(controllers.NewSessionsController)
+    container.Register(controllers.NewMediaController)
 
     log.Info(ctx, "Init /api routes...")
     container.Resolve(resolveRoute)
@@ -78,9 +78,9 @@ func resolveRoute(
     r chi.Router,
     requestIdMiddleware middleware.RequestIdMiddleware, 
     authMiddleware middleware.AuthMiddleware,
-    userController *controller.UsersController,
-    sessionsController *controller.SessionsController,
-    mediaController *controller.MediaController,
+    userController *controllers.UsersController,
+    sessionsController *controllers.SessionsController,
+    mediaController *controllers.MediaController,
 ) {
     r.Route("/api", func(r chi.Router) {
         r.Use(requestIdMiddleware)
