@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"app/internal/application/fommu/usecase"
+	"app/internal/application/fommu/usecases"
 	"app/internal/application/appstatus"
 	"app/internal/core/types"
 	"app/internal/log"
@@ -14,12 +14,12 @@ import (
 )
 
 type SessionsController struct {
-    signin        *usecase.SigninUsecase        `injectable:""`
-    signout       *usecase.SignOutUsecase       `injectable:""`
-    refreshToken  *usecase.RefreshTokenUsecase  `injectable:""`
-    getToken      *usecase.GetTokenUsecase      `injectable:""`
-    revokeSession *usecase.RevokeSessionUsecase `injectable:""`
-    verifySession *usecase.GetIdentityUsecase   `injectable:""`
+    signin        *usecases.SigninUsecase        `injectable:""`
+    signout       *usecases.SignOutUsecase       `injectable:""`
+    refreshToken  *usecases.RefreshTokenUsecase  `injectable:""`
+    getToken      *usecases.GetTokenUsecase      `injectable:""`
+    revokeSession *usecases.RevokeSessionUsecase `injectable:""`
+    verifySession *usecases.GetIdentityUsecase   `injectable:""`
 }
 
 func NewSessionsController() *SessionsController {

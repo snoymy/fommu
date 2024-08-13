@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"app/internal/application/fommu/usecase"
+	"app/internal/application/fommu/usecases"
 	"app/internal/application/appstatus"
 	"app/internal/log"
 	"encoding/json"
@@ -12,8 +12,8 @@ import (
 )
 
 type MediaController struct {
-    uploadFileUsecase *usecase.UploadFileUsecase `injectable:""`
-    getFileUsecase    *usecase.GetFileUsecase    `injectable:""`
+    uploadFileUsecase *usecases.UploadFileUsecase `injectable:""`
+    getFileUsecase    *usecases.GetFileUsecase    `injectable:""`
 }
 
 func NewMediaController() *MediaController {

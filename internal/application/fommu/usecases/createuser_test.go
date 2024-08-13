@@ -1,4 +1,4 @@
-package usecase_test
+package usecases_test
 
 import (
 	"app/domain/usecase"
@@ -16,7 +16,7 @@ func TestValidEmail(t *testing.T) {
     userRepo.On("FindUserByEmail", mock.Anything).Return(nil, nil)
     userRepo.On("CreateUser", mock.Anything).Return(nil, nil)
 
-    uc := usecase.NewSignupUsecase(userRepo)
+    uc := usecases.NewSignupUsecase(userRepo)
     err := uc.Exec(context.Background(), dto.SignupDTO{
         Username: "username",
         Password: "password1",
@@ -27,7 +27,7 @@ func TestValidEmail(t *testing.T) {
 }
 
 // func TestInvalidEmail(t *testing.T) {
-//     uc := usecase.NewCreateUserUsecase()
+//     uc := usecases.NewCreateUserUsecase()
 //     err := uc.Execute(dto.CreateUserDTO{
 //         Username: "username",
 //         Password: "password1",
@@ -38,7 +38,7 @@ func TestValidEmail(t *testing.T) {
 // }
 // 
 // func TestValidUsername(t *testing.T) {
-//     uc := usecase.NewCreateUserUsecase()
+//     uc := usecases.NewCreateUserUsecase()
 //     err := uc.Execute(dto.CreateUserDTO{
 //         Username: "username",
 //         Password: "password1",
@@ -49,7 +49,7 @@ func TestValidEmail(t *testing.T) {
 // }
 // 
 // func TestInvalidUsername(t *testing.T) {
-//     uc := usecase.NewCreateUserUsecase()
+//     uc := usecases.NewCreateUserUsecase()
 //     err := uc.Execute(dto.CreateUserDTO{
 //         Username: "user@name",
 //         Password: "password1",

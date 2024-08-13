@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"app/internal/application/activitypub/usecase"
+	"app/internal/application/activitypub/usecases"
 	"app/internal/application/appstatus"
 	"app/internal/config"
 	"app/internal/log"
@@ -11,7 +11,7 @@ import (
 )
 
 type WellKnown struct {
-   findresource *usecase.FindResourceUsecase `injectable:""`
+   findresource *usecases.FindResourceUsecase `injectable:""`
 }
 
 func NewWellKnownController() *WellKnown {

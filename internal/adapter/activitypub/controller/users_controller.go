@@ -2,7 +2,7 @@ package controller
 
 import (
 	"app/internal/adapter/mapper"
-	"app/internal/application/activitypub/usecase"
+	"app/internal/application/activitypub/usecases"
 	"app/internal/application/appstatus"
 	"app/internal/log"
 	"fmt"
@@ -17,9 +17,9 @@ import (
 )
 
 type APUsersController struct {
-    getUser         *usecase.GetUserUsecase         `injectable:""`
-    followUser      *usecase.ProcessFollowActivityUsecase      `injectable:""`
-    createActivity  *usecase.CreateActivityUsecase  `injectable:""`
+    getUser         *usecases.GetUserUsecase         `injectable:""`
+    followUser      *usecases.ProcessFollowActivityUsecase      `injectable:""`
+    createActivity  *usecases.CreateActivityUsecase  `injectable:""`
 }
 
 func NewAPUsersController() *APUsersController {

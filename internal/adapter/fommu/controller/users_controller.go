@@ -2,7 +2,7 @@ package controller
 
 import (
 	"app/internal/application/fommu/dto"
-	"app/internal/application/fommu/usecase"
+	"app/internal/application/fommu/usecases"
 	"app/internal/application/appstatus"
 	"app/internal/log"
 	"app/internal/core/types"
@@ -14,11 +14,11 @@ import (
 )
 
 type UsersController struct {
-    signup      *usecase.SignupUsecase      `injectable:""`
-    getUser     *usecase.GetUserUsecase     `injectable:""`
-    editProfile *usecase.EditProfileUsecase `injectable:""`
-    editAccount *usecase.EditAccountUsecase `injectable:""`
-    searchUser  *usecase.SearchUserUsecase  `injectable:""`
+    signup      *usecases.SignupUsecase      `injectable:""`
+    getUser     *usecases.GetUserUsecase     `injectable:""`
+    editProfile *usecases.EditProfileUsecase `injectable:""`
+    editAccount *usecases.EditAccountUsecase `injectable:""`
+    searchUser  *usecases.SearchUserUsecase  `injectable:""`
 }
 
 func NewUsersController() *UsersController {

@@ -2,14 +2,14 @@ package middleware
 
 import (
 	"app/internal/adapter/handler"
-	"app/internal/application/activitypub/usecase"
+	"app/internal/application/activitypub/usecases"
 	"fmt"
 	"net/http"
 )
 
 type VerifyMiddleware func(http.Handler) http.Handler
 
-func NewVerifyMiddleware(verify *usecase.VerifySignatureUsecase) VerifyMiddleware {
+func NewVerifyMiddleware(verify *usecases.VerifySignatureUsecase) VerifyMiddleware {
     return func(next http.Handler) http.Handler {
         return http.HandlerFunc(handler.Handle(
             func(w http.ResponseWriter, r *http.Request) error {

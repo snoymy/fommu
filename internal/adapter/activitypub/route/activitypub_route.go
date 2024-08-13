@@ -10,7 +10,7 @@ import (
 	"app/internal/adapter/query"
 	"app/internal/adapter/repoimpl"
 	"app/internal/application/activitypub/repo"
-	"app/internal/application/activitypub/usecase"
+	"app/internal/application/activitypub/usecases"
 	"app/internal/log"
 	"app/lib/di"
 	"context"
@@ -43,11 +43,11 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient httpclient.ActivitypubClient)
     container.Register(func() repo.ActivitiesRepo { return repoimpl.NewActActivitiesRepoImpl() })
 
     // usecase
-    container.Register(usecase.NewVerifySignatureUsecase)
-    container.Register(usecase.NewGetUserUsecase)
-    container.Register(usecase.NewFindResourceUsecase)
-    container.Register(usecase.NewProcessFollowActivityUsecase)
-    container.Register(usecase.NewCreateActivityUsecase)
+    container.Register(usecases.NewVerifySignatureUsecase)
+    container.Register(usecases.NewGetUserUsecase)
+    container.Register(usecases.NewFindResourceUsecase)
+    container.Register(usecases.NewProcessFollowActivityUsecase)
+    container.Register(usecases.NewCreateActivityUsecase)
 
     // controller and middleware
     container.Register(middleware.NewVerifyMiddleware)

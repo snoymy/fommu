@@ -1,13 +1,13 @@
 package listener
 
 import (
-	"app/internal/application/activitypub/usecase"
+	"app/internal/application/activitypub/usecases"
 	"app/internal/log"
 	"context"
 )
 
 type ProcessActivityListener struct {
-    followUser *usecase.ProcessFollowActivityUsecase `injectable:""`
+    followUser *usecases.ProcessFollowActivityUsecase `injectable:""`
 }
 
 func NewProcessActivityListener() *ProcessActivityListener {

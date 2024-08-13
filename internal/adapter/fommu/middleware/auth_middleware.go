@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"app/internal/application/fommu/usecase"
+	"app/internal/application/fommu/usecases"
 	"app/internal/application/appstatus"
 	"app/internal/adapter/handler"
 	"app/internal/log"
@@ -12,7 +12,7 @@ import (
 
 type AuthMiddleware func(http.Handler) http.Handler
 
-func NewAuthMiddleware(auth *usecase.AuthUsecase) AuthMiddleware {
+func NewAuthMiddleware(auth *usecases.AuthUsecase) AuthMiddleware {
     return func(next http.Handler) http.Handler {
         return http.HandlerFunc(handler.Handle(
             func(w http.ResponseWriter, r *http.Request) error {

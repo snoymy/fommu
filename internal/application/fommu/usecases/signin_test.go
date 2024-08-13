@@ -1,4 +1,4 @@
-package usecase_test
+package usecases_test
 
 import (
 	"app/domain/usecase"
@@ -26,7 +26,7 @@ func TestSignin(t *testing.T) {
     sessionRepo.On("CreateSession", mock.Anything).Return(nil, nil)
     userRepo.On("FindUserByEmail", mock.Anything).Return(user, nil)
 
-    uc := usecase.NewSigninUsecase(userRepo, sessionRepo)
+    uc := usecases.NewSigninUsecase(userRepo, sessionRepo)
     session, err := uc.Exec(context.Background(), "user001@testemail.com", "password1")
 
     j, _ := json.MarshalIndent(session, "", "\t")

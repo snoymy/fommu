@@ -9,7 +9,7 @@ import (
 	"app/internal/adapter/query"
 	"app/internal/adapter/repoimpl"
 	"app/internal/application/fommu/repo"
-	"app/internal/application/fommu/usecase"
+	"app/internal/application/fommu/usecases"
 	"app/internal/log"
 	"app/lib/di"
 	"context"
@@ -41,26 +41,26 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient httpclient.ActivitypubClient)
     container.Register(func() repo.MediaRepo { return repoimpl.NewMediaRepoImpl() })
 
     // usecase
-    container.Register(usecase.NewAuthUsecase)
+    container.Register(usecases.NewAuthUsecase)
     
     // users
-    container.Register(usecase.NewSignupUsecase)
-    container.Register(usecase.NewGetUserUsecase)
-    container.Register(usecase.NewEditProfileUsecase)
-    container.Register(usecase.NewEditAccountUsecase)
-    container.Register(usecase.NewSearchUserUsecase)
+    container.Register(usecases.NewSignupUsecase)
+    container.Register(usecases.NewGetUserUsecase)
+    container.Register(usecases.NewEditProfileUsecase)
+    container.Register(usecases.NewEditAccountUsecase)
+    container.Register(usecases.NewSearchUserUsecase)
 
     // sessions
-    container.Register(usecase.NewSigninUsecase)
-    container.Register(usecase.NewSignOutUsecase)
-    container.Register(usecase.NewRefreshTokenUsecase)
-    container.Register(usecase.NewRevokeSessionUsecase)
-    container.Register(usecase.NewGetIdentityUsecase)
+    container.Register(usecases.NewSigninUsecase)
+    container.Register(usecases.NewSignOutUsecase)
+    container.Register(usecases.NewRefreshTokenUsecase)
+    container.Register(usecases.NewRevokeSessionUsecase)
+    container.Register(usecases.NewGetIdentityUsecase)
 
     // media
-    container.Register(usecase.NewUploadFileUsecase)
-    container.Register(usecase.NewGetFileUsecase)
-    container.Register(usecase.NewGetTokenUsecase)
+    container.Register(usecases.NewUploadFileUsecase)
+    container.Register(usecases.NewGetFileUsecase)
+    container.Register(usecases.NewGetTokenUsecase)
 
     // controller and middleware
     container.Register(middleware.NewRequestIDMiddleware)
