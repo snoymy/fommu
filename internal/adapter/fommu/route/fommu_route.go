@@ -3,7 +3,7 @@ package route
 import (
 	"app/internal/adapter/commands"
 	"app/internal/adapter/fommu/controllers"
-	"app/internal/adapter/fommu/middlewares"
+	"app/internal/adapter/middlewares"
 	"app/internal/adapter/queries"
 	"app/internal/adapter/repoimpl"
 	"app/internal/application/fommu/ports"

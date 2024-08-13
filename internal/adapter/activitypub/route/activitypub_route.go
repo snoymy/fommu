@@ -3,7 +3,7 @@ package route
 import (
 	"app/internal/adapter/activitypub/controllers"
 	"app/internal/adapter/activitypub/listeners"
-	"app/internal/adapter/activitypub/middlewares"
+	"app/internal/adapter/middlewares"
 	"app/internal/adapter/commands"
 	"app/internal/adapter/queries"
 	"app/internal/adapter/repoimpl"
@@ -50,6 +50,7 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient httpclient.ActivitypubClient)
     container.Register(usecases.NewCreateActivityUsecase)
 
     // controller and middleware
+    container.Register(middlewares.NewRequestIDMiddleware)
     container.Register(middlewares.NewVerifyMiddleware)
     container.Register(controllers.NewWellKnownController)
     container.Register(controllers.NewAPUsersController)
@@ -67,8 +68,15 @@ func registerEvent(bus EventBus.Bus, processActivityListener *listeners.ProcessA
     bus.SubscribeAsync("topic:process_activity", processActivityListener.Handler, false)
 }
 
-func resolveRoute(r chi.Router, verifySignatureMiddleware middlewares.VerifyMiddleware, userController *controllers.APUsersController, wellknown *controllers.WellKnown) {
-    r.Route("/", func(r chi.Router) {
+func resolveRoute(
+    r chi.Router, 
+    requestIdMiddleware middlewares.RequestIdMiddleware, 
+    verifySignatureMiddleware middlewares.VerifyMiddleware, 
+    userController *controllers.APUsersController, 
+    wellknown *controllers.WellKnown,
+) {
+    r.With().Route("/", func(r chi.Router) {
+        r.Use(requestIdMiddleware)
         r.Get("/users/{username}", router.Handle(userController.GetUser)) 
 
         r.Group(func(r chi.Router) {
