@@ -1,4 +1,4 @@
-package handler
+package router
 
 import (
     "net/http"
@@ -8,7 +8,7 @@ type HandlerFunc func(w http.ResponseWriter, r *http.Request) error
 
 var ErrorHandler func(error, http.ResponseWriter, *http.Request)
 
-func defaultErrorHandler(e error, w http.ResponseWriter, r *http.Request) {
+func defaultErrorHandler(e error, w http.ResponseWriter, _ *http.Request) {
     w.WriteHeader(500)
     w.Write([]byte(e.Error()))
 }

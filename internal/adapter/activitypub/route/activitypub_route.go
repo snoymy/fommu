@@ -5,12 +5,12 @@ import (
 	"app/internal/adapter/activitypub/listeners"
 	"app/internal/adapter/activitypub/middlewares"
 	"app/internal/adapter/commands"
-	"app/internal/adapter/handler"
-	"app/internal/adapter/httpclient"
 	"app/internal/adapter/queries"
 	"app/internal/adapter/repoimpl"
 	"app/internal/application/activitypub/ports"
 	"app/internal/application/activitypub/usecases"
+	"app/internal/infrastructure/httpclient"
+	"app/internal/infrastructure/router"
 	"app/internal/log"
 	"app/lib/di"
 	"context"
@@ -69,15 +69,15 @@ func registerEvent(bus EventBus.Bus, processActivityListener *listeners.ProcessA
 
 func resolveRoute(r chi.Router, verifySignatureMiddleware middlewares.VerifyMiddleware, userController *controllers.APUsersController, wellknown *controllers.WellKnown) {
     r.Route("/", func(r chi.Router) {
-        r.Get("/users/{username}", handler.Handle(userController.GetUser)) 
+        r.Get("/users/{username}", router.Handle(userController.GetUser)) 
 
         r.Group(func(r chi.Router) {
             r.Use(verifySignatureMiddleware)
-            r.Post("/users/{username}/inbox", handler.Handle(userController.Inbox)) 
+            r.Post("/users/{username}/inbox", router.Handle(userController.Inbox)) 
         })
 
         r.Route("/.well-known", func(r chi.Router) {
-            r.Get("/webfinger", handler.Handle(wellknown.WebFinger)) 
+            r.Get("/webfinger", router.Handle(wellknown.WebFinger)) 
         })
     })
 }

@@ -1,7 +1,7 @@
 package queries
 
 import (
-	"app/internal/adapter/httpclient"
+	"app/internal/infrastructure/httpclient"
 	"app/internal/core/entities"
 	"context"
 	"strings"

@@ -1,9 +1,9 @@
 package middlewares
 
 import (
-	"app/internal/application/fommu/usecases"
 	"app/internal/application/appstatus"
-	"app/internal/adapter/handler"
+	"app/internal/application/fommu/usecases"
+	"app/internal/infrastructure/router"
 	"app/internal/log"
 	"context"
 	"net/http"
@@ -14,7 +14,7 @@ type AuthMiddleware func(http.Handler) http.Handler
 
 func NewAuthMiddleware(auth *usecases.AuthUsecase) AuthMiddleware {
     return func(next http.Handler) http.Handler {
-        return http.HandlerFunc(handler.Handle(
+        return http.HandlerFunc(router.Handle(
             func(w http.ResponseWriter, r *http.Request) error {
                 ctx := r.Context()
                 log.EnterMethod(ctx)

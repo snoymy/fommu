@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"app/internal/adapter/handler"
+	"app/internal/infrastructure/router"
 	"app/internal/log"
 	"context"
 	"net/http"
@@ -13,7 +13,7 @@ type RequestIdMiddleware func(http.Handler) http.Handler
 
 func NewRequestIDMiddleware() RequestIdMiddleware {
     return func(next http.Handler) http.Handler {
-        return http.HandlerFunc(handler.Handle(
+        return http.HandlerFunc(router.Handle(
             func(w http.ResponseWriter, r *http.Request) error {
                 log.EnterMethod(r.Context())
 

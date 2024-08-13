@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"app/internal/adapter/httpclient"
+	"app/internal/infrastructure/httpclient"
 	"app/internal/core/entities"
 	"context"
 	"fmt"

@@ -4,12 +4,12 @@ import (
 	"app/internal/adapter/commands"
 	"app/internal/adapter/fommu/controllers"
 	"app/internal/adapter/fommu/middlewares"
-	"app/internal/adapter/handler"
-	"app/internal/adapter/httpclient"
 	"app/internal/adapter/queries"
 	"app/internal/adapter/repoimpl"
 	"app/internal/application/fommu/ports"
 	"app/internal/application/fommu/usecases"
+	"app/internal/infrastructure/httpclient"
+	"app/internal/infrastructure/router"
 	"app/internal/log"
 	"app/lib/di"
 	"context"
@@ -87,36 +87,36 @@ func resolveRoute(
         r.Route("/users", func(r chi.Router) {
             r.Group(func(r chi.Router) {
                 r.Use(authMiddleware)
-                r.Patch("/{username}/settings/profiles", handler.Handle(userController.EditProfile)) 
-                r.Patch("/{username}/settings/account", handler.Handle(userController.EditAccount)) 
+                r.Patch("/{username}/settings/profiles", router.Handle(userController.EditProfile)) 
+                r.Patch("/{username}/settings/account", router.Handle(userController.EditAccount)) 
             })
 
-            r.Get("/{username}", handler.Handle(userController.GetUser)) 
-            r.Post("/", handler.Handle(userController.SignUp)) 
-            r.Get("/lookup", handler.Handle(userController.LookUp)) 
-            r.Get("/search", handler.Handle(userController.Search)) 
+            r.Get("/{username}", router.Handle(userController.GetUser)) 
+            r.Post("/", router.Handle(userController.SignUp)) 
+            r.Get("/lookup", router.Handle(userController.LookUp)) 
+            r.Get("/search", router.Handle(userController.Search)) 
         })
 
         r.Route("/sessions", func(r chi.Router) {
             r.Group(func(r chi.Router) {
                 r.Use(authMiddleware)
-                r.Delete("/revoke/{sessionId}", handler.Handle(sessionsController.RevokeSession))
-                r.Delete("/signout", handler.Handle(sessionsController.SignOut))
-                r.Get("/identity", handler.Handle(sessionsController.VerifySession))
+                r.Delete("/revoke/{sessionId}", router.Handle(sessionsController.RevokeSession))
+                r.Delete("/signout", router.Handle(sessionsController.SignOut))
+                r.Get("/identity", router.Handle(sessionsController.VerifySession))
             })
 
-            r.Post("/signin", handler.Handle(sessionsController.Signin))
-            r.Post("/token/refresh", handler.Handle(sessionsController.RefreshToken))
-            r.Get("/token", handler.Handle(sessionsController.GetToken))
+            r.Post("/signin", router.Handle(sessionsController.Signin))
+            r.Post("/token/refresh", router.Handle(sessionsController.RefreshToken))
+            r.Get("/token", router.Handle(sessionsController.GetToken))
         })
 
         r.Route("/media", func(r chi.Router) {
             r.Group(func(r chi.Router) {
                 r.Use(authMiddleware)
-                r.Post("/upload", handler.Handle(mediaController.UploadFile))
+                r.Post("/upload", router.Handle(mediaController.UploadFile))
             })
 
-            r.Get("/{fileName}", handler.Handle(mediaController.GetFile))
+            r.Get("/{fileName}", router.Handle(mediaController.GetFile))
         })
     })
 }

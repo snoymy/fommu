@@ -4,16 +4,13 @@ import (
 	aproute "app/internal/adapter/activitypub/route"
 	apiroute "app/internal/adapter/fommu/route"
 	"app/internal/config"
-	"app/internal/adapter/database"
-	"app/internal/adapter/handler"
-	"app/internal/adapter/httpclient"
+	"app/internal/infrastructure/database"
+	"app/internal/infrastructure/httpclient"
+	"app/internal/infrastructure/router"
 	"app/internal/log"
 	"context"
 	"net/http"
 	"strconv"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/cors"
 )
 
 func main() {
@@ -32,18 +29,7 @@ func main() {
     }
     log.Info(ctx, "Init database succeed")
 
-    handler.ErrorHandler = handler.HandleError
-
-    r := chi.NewRouter()
-
-    r.Use(cors.Handler(cors.Options{
-        AllowedOrigins:   []string{"http://localhost:4000", "https://fommu.loca.lt"},
-        AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-        AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-        ExposedHeaders:   []string{"Link"},
-        AllowCredentials: true,
-        MaxAge:           300, // Maximum value not ignored by any of major browsers
-    }))
+    r := router.NewRouter()
 
     apiroute.InitRoute(r, db, apClient)
     aproute.InitRoute(r, db, apClient)
