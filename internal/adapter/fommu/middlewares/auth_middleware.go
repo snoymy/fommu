@@ -1,4 +1,4 @@
-package middleware
+package middlewares
 
 import (
 	"app/internal/application/fommu/usecases"

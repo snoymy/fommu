@@ -3,7 +3,7 @@ package route
 import (
 	"app/internal/adapter/command"
 	"app/internal/adapter/fommu/controllers"
-	"app/internal/adapter/fommu/middleware"
+	"app/internal/adapter/fommu/middlewares"
 	"app/internal/adapter/handler"
 	"app/internal/adapter/httpclient"
 	"app/internal/adapter/query"
@@ -63,8 +63,8 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient httpclient.ActivitypubClient)
     container.Register(usecases.NewGetTokenUsecase)
 
     // controller and middleware
-    container.Register(middleware.NewRequestIDMiddleware)
-    container.Register(middleware.NewAuthMiddleware)
+    container.Register(middlewares.NewRequestIDMiddleware)
+    container.Register(middlewares.NewAuthMiddleware)
     container.Register(controllers.NewUsersController)
     container.Register(controllers.NewSessionsController)
     container.Register(controllers.NewMediaController)
@@ -76,8 +76,8 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient httpclient.ActivitypubClient)
 
 func resolveRoute(
     r chi.Router,
-    requestIdMiddleware middleware.RequestIdMiddleware, 
-    authMiddleware middleware.AuthMiddleware,
+    requestIdMiddleware middlewares.RequestIdMiddleware, 
+    authMiddleware middlewares.AuthMiddleware,
     userController *controllers.UsersController,
     sessionsController *controllers.SessionsController,
     mediaController *controllers.MediaController,
