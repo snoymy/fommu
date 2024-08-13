@@ -2,7 +2,7 @@ package route
 
 import (
 	"app/internal/adapter/activitypub/controllers"
-	"app/internal/adapter/activitypub/listener"
+	"app/internal/adapter/activitypub/listeners"
 	"app/internal/adapter/activitypub/middlewares"
 	"app/internal/adapter/command"
 	"app/internal/adapter/handler"
@@ -54,7 +54,7 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient httpclient.ActivitypubClient)
     container.Register(controllers.NewWellKnownController)
     container.Register(controllers.NewAPUsersController)
 
-    container.Register(listener.NewProcessActivityListener)
+    container.Register(listeners.NewProcessActivityListener)
 
     log.Info(ctx, "Init / routes...")
     container.Resolve(resolveRoute)
@@ -63,7 +63,7 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient httpclient.ActivitypubClient)
     container.Resolve(registerEvent)
 }
 
-func registerEvent(bus EventBus.Bus, processActivityListener *listener.ProcessActivityListener) {
+func registerEvent(bus EventBus.Bus, processActivityListener *listeners.ProcessActivityListener) {
     bus.SubscribeAsync("topic:process_activity", processActivityListener.Handler, false)
 }
 

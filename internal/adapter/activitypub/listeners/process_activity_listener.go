@@ -1,4 +1,4 @@
-package listener
+package listeners
 
 import (
 	"app/internal/application/activitypub/usecases"
