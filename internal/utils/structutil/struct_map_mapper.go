@@ -1,4 +1,4 @@
-package mapper
+package structutil
 
 import "encoding/json"
 

@@ -2,11 +2,11 @@ package repoimpl
 
 import (
 	"app/internal/adapter/commands"
-	"app/internal/adapter/mapper"
 	"app/internal/adapter/queries"
 	"app/internal/config"
 	"app/internal/core/entities"
 	"app/internal/log"
+	"app/internal/utils/structutil"
 	"context"
 	"net/url"
 	"time"
@@ -61,14 +61,14 @@ func (r *FollowRepoImpl) sendAcceptActivity(ctx context.Context, follow *entitie
     entityId := uuid.New().String()
     acceptActivityId, err := url.JoinPath(config.Fommu.URL, "activities/accept", entityId)
 
-    activity, err := mapper.MapToStruct[activitypub.Activity](activityEnitity.Activity)
+    activity, err := structutil.MapToStruct[activitypub.Activity](activityEnitity.Activity)
     if err != nil {
         return err
     }
     acceptActivity := activitypub.AcceptNew(activitypub.IRI(acceptActivityId), activity)
     acceptActivity.Actor = activity.Object.GetLink()
 
-    activityMap, err := mapper.StructToMap(acceptActivity)
+    activityMap, err := structutil.StructToMap(acceptActivity)
     if err != nil {
         return err
     }

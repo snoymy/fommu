@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"app/internal/adapter/mapper"
+	"app/internal/adapter/mappers"
 	"app/internal/application/activitypub/usecases"
 	"app/internal/application/appstatus"
 	"app/internal/log"
@@ -48,7 +48,7 @@ func (f *APUsersController) GetUser(w http.ResponseWriter, r *http.Request) erro
         return err
     }
 
-    person, err := mapper.UserToPerson(user)
+    person, err := mappers.UserToPerson(user)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())
         return appstatus.InternalServerError("Something went wrong.")
@@ -94,7 +94,7 @@ func (f *APUsersController) Inbox(w http.ResponseWriter, r *http.Request) error 
     }
     fmt.Printf("\n\nInbox: %s\n", body)
 
-    activity, err := mapper.JsonToActivity(string(body))
+    activity, err := mappers.JsonToActivity(string(body))
     if err := f.createActivity.Exec(r.Context(), activity); err != nil {
         log.Info(r.Context(), "Response with Error: " + err.Error())
         return err

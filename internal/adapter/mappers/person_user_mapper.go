@@ -1,10 +1,11 @@
-package mapper
+package mappers
 
 import (
 	"app/internal/core/entities"
 	"app/internal/core/types"
 	"app/internal/utils/mimeutil"
 	"app/internal/utils/stringutil"
+	"app/internal/utils/structutil"
 	"errors"
 	"net/url"
 	"path/filepath"
@@ -111,7 +112,7 @@ func UserToPerson(user *entities.UserEntity) (*activitypub.Person, error) {
     }
     person.Attachment = activitypub.ItemCollection{}
     for _, item := range user.Attachment.ValueOrZero() {
-        attachment, err := MapToStruct[activitypub.Object](item.(map[string]interface{}))
+        attachment, err := structutil.MapToStruct[activitypub.Object](item.(map[string]interface{}))
         if err != nil {
             return nil, err
         }
@@ -119,7 +120,7 @@ func UserToPerson(user *entities.UserEntity) (*activitypub.Person, error) {
     }
     person.Tag = activitypub.ItemCollection{}
     for _, item := range user.Tag.ValueOrZero() {
-        tag, err := MapToStruct[activitypub.Object](item.(map[string]interface{}))
+        tag, err := structutil.MapToStruct[activitypub.Object](item.(map[string]interface{}))
         if err != nil {
             return nil, err
         }
@@ -136,7 +137,7 @@ func parseAttachment(person *activitypub.Person) (types.JsonArray, error) {
         for _, item := range person.Attachment {
             var attachment interface{}
             if item.IsObject() {
-                attachment, err = StructToMap(item.(*activitypub.Object))
+                attachment, err = structutil.StructToMap(item.(*activitypub.Object))
                 if err != nil {
                     return nil, err
                 }
@@ -157,7 +158,7 @@ func parseTag(person *activitypub.Person) (types.JsonArray, error) {
         for _, item := range person.Tag {
             var tag interface{}
             if item.IsObject() {
-                tag, err = StructToMap(item.(*activitypub.Object))
+                tag, err = structutil.StructToMap(item.(*activitypub.Object))
                 if err != nil {
                     return nil, err
                 }

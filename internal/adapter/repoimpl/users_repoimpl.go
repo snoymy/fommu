@@ -2,7 +2,7 @@ package repoimpl
 
 import (
 	"app/internal/adapter/commands"
-	"app/internal/adapter/mapper"
+	"app/internal/adapter/mappers"
 	"app/internal/adapter/queries"
 	"app/internal/config"
 	"app/internal/core/entities"
@@ -68,7 +68,7 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
             return nil, err
         }
         
-        userTemp, err := mapper.PersonToUser(person)
+        userTemp, err := mappers.PersonToUser(person)
 
         if followers != nil {
             userTemp.FollowerCount = int(followers.TotalItems)
@@ -151,7 +151,7 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
         return nil, err
     }
 
-    user, err = mapper.PersonToUser(person)
+    user, err = mappers.PersonToUser(person)
     user.ID = uuid.New().String()
     user.Remote = true
     user.Remote = true
@@ -198,7 +198,7 @@ func (r *UserRepoImpl) FindUserByActorId(ctx context.Context, actorId string) (*
         return nil, err
     }
 
-    user, err = mapper.PersonToUser(person)
+    user, err = mappers.PersonToUser(person)
     user.ID = uuid.New().String()
     user.Remote = true
     user.Remote = true
@@ -256,7 +256,7 @@ func (r *UserRepoImpl) SearchUser(ctx context.Context, textSearch string, domain
         return nil, err
     }
 
-    user, err := mapper.PersonToUser(person)
+    user, err := mappers.PersonToUser(person)
     user.ID = uuid.New().String()
     user.Remote = true
     user.Remote = true

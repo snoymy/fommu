@@ -1,12 +1,12 @@
 package usecases
 
 import (
-	"app/internal/adapter/mapper"
 	"app/internal/application/activitypub/ports"
-	"app/internal/config"
 	"app/internal/application/appstatus"
+	"app/internal/config"
 	"app/internal/core/entities"
 	"app/internal/log"
+	"app/internal/utils/structutil"
 	"context"
 	"net/url"
 	"path"
@@ -36,7 +36,7 @@ func (uc *ProcessFollowActivityUsecase) Exec(ctx context.Context, activityId str
         return err
     }
 
-    activity, err := mapper.MapToStruct[activitypub.Activity](activityEntity.Activity)
+    activity, err := structutil.MapToStruct[activitypub.Activity](activityEntity.Activity)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())
         return appstatus.InternalServerError("Something went wrong")

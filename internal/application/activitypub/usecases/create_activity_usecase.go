@@ -1,11 +1,11 @@
 package usecases
 
 import (
-	"app/internal/adapter/mapper"
 	"app/internal/application/activitypub/ports"
 	"app/internal/application/appstatus"
 	"app/internal/core/entities"
 	"app/internal/log"
+	"app/internal/utils/structutil"
 	"context"
 	"slices"
 	"time"
@@ -83,7 +83,7 @@ func (uc *CreateActivityUsecase) validateActivity(ctx context.Context, activity 
 }
 
 func (uc *CreateActivityUsecase) createActivity(ctx context.Context, activity *activitypub.Activity) (*entities.ActivityEntity, error) {
-    activityMap, err := mapper.StructToMap(activity)
+    activityMap, err := structutil.StructToMap(activity)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())
         return nil, appstatus.InternalServerError("Something went wrong")
