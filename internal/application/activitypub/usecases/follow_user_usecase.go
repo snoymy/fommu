@@ -45,10 +45,10 @@ func (uc *ProcessFollowActivityUsecase) Exec(ctx context.Context, activityId str
     err = uc.process(ctx, activity, activityId)
     if err != nil {
         log.Debug(ctx, err.Error())
-        activityEntity.Status = "failed"
+        activityEntity.Status = entities.ActivityStatusFailed
     } else {
         log.Debug(ctx, "Succeed")
-        activityEntity.Status = "succeed"
+        activityEntity.Status = entities.ActivityStatusSucceed
     }
     activityEntity.UpdateAt.Set(time.Now().UTC())
 
@@ -173,9 +173,9 @@ func (uc *ProcessFollowActivityUsecase) createFollow(follower *entities.UserEnti
     following.Follower = follower.ID
     following.Following = target.ID
     if target.AutoApproveFollower == true {
-        following.Status = "followed"
+        following.Status = entities.FollowStatusFollowed
     } else {
-        following.Status = "pending"
+        following.Status = entities.FollowStatusPending
     }
     if activityId != "" {
         following.ActivityId.Set(activityId)

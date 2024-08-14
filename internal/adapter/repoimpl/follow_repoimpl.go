@@ -36,12 +36,12 @@ func (r *FollowRepoImpl) CreateFollow(ctx context.Context, follow *entities.Foll
     }
 
     pendingFollow := *follow
-    pendingFollow.Status = "pending"
+    pendingFollow.Status = entities.FollowStatusPending
     if err := r.commands.CreateFollow(ctx, &pendingFollow); err != nil {
         return err
     }
 
-    if follow.Status == "followed" {
+    if follow.Status == entities.FollowStatusFollowed {
         err := r.commands.AcceptFollow(ctx, follow)
         if err != nil {
             return err
@@ -79,7 +79,7 @@ func (r *FollowRepoImpl) sendAcceptActivity(ctx context.Context, follow *entitie
     acceptActivityEntity.Type.Set(string(activitypub.AcceptType))
     acceptActivityEntity.Remote = false
     acceptActivityEntity.Activity = activityMap
-    acceptActivityEntity.Status = "pending"
+    acceptActivityEntity.Status = entities.ActivityStatusPending
     acceptActivityEntity.CreateAt = time.Now().UTC()
     if err := r.commands.CreateActivity(ctx, acceptActivityEntity); err != nil {
         return err
@@ -99,7 +99,7 @@ func (r *FollowRepoImpl) sendAcceptActivity(ctx context.Context, follow *entitie
     keyId := following.ActorId + "#main-key"
     privateKey := following.PrivateKey.ValueOrZero()
     if err := r.commands.SendActivity(ctx, targetUrl, privateKey, keyId, acceptActivity); err != nil {
-        acceptActivityEntity.Status = "failed"
+        acceptActivityEntity.Status = entities.ActivityStatusFailed
         if err := r.commands.UpdateActivity(ctx, acceptActivityEntity); err != nil {
             return err
         }
@@ -107,7 +107,7 @@ func (r *FollowRepoImpl) sendAcceptActivity(ctx context.Context, follow *entitie
         return err
     }
 
-    acceptActivityEntity.Status = "succeed"
+    acceptActivityEntity.Status = entities.ActivityStatusSucceed
     acceptActivityEntity.UpdateAt.Set(time.Now().UTC())
     if err := r.commands.UpdateActivity(ctx, acceptActivityEntity); err != nil {
         return err

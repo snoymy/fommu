@@ -88,7 +88,7 @@ func (uc *UploadFileUsecase) createMedia(ctx context.Context, file []byte, mimeT
     media.Description.SetNull()
     media.Metadata.SetNull()
     media.Owner = owner 
-    media.Status = "active"
+    media.Status = entities.MediaStatusActive
     media.ReferenceCount = 0
     media.CreateAt = time.Now().UTC()
 

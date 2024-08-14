@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+const (
+    FollowStatusPending = "pending"
+    FollowStatusFollowed = "followed"
+)
+
 type FollowEntity struct {
     ID                  string                              `db:"id"`
     Follower            string                              `db:"follower"`

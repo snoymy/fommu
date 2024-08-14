@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+const (
+    ActivityStatusPending = "pending"
+    ActivityStatusSucceed = "succeed"
+    ActivityStatusFailed = "failed"
+)
+
 type ActivityEntity struct {
     ID                  string                              `db:"id"`
     Type                types.Nullable[string]              `db:"type"`              

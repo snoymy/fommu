@@ -118,7 +118,7 @@ func (uc *SignupUsecase) createUser(email string, username string, password stri
     user.PublicKey = string(publicKeyByte)
     user.JoinAt.Set(time.Now().UTC())
     user.CreateAt = time.Now().UTC()
-    user.Status = "active"
+    user.Status = entities.UserStatusActive
 
     return user, nil
 }

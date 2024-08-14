@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+const (
+    UserStatusActive = "active"
+    UserStatusDisabled = "disabled"
+    UserStatusDelete = "delete"
+)
+
 type UserEntity struct {
     ID                  string                              `db:"id"`
     Email               types.Nullable[string]              `db:"email"`

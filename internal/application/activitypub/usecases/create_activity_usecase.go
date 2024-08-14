@@ -93,7 +93,7 @@ func (uc *CreateActivityUsecase) createActivity(ctx context.Context, activity *a
     activityEntity.Type.Set(string(activity.Type))
     activityEntity.Remote = true
     activityEntity.Activity = activityMap
-    activityEntity.Status = "pending"
+    activityEntity.Status = entities.ActivityStatusPending
     activityEntity.CreateAt = time.Now().UTC()
 
     return activityEntity, nil

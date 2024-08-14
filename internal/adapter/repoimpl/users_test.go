@@ -5,6 +5,7 @@ import (
 	"app/config/database"
 	"app/domain/entity"
 	"app/infa/repoimpl"
+	"app/internal/core/entities"
 	"app/internal/utils"
 	"context"
 	"crypto/sha256"
@@ -43,7 +44,7 @@ func TestCreateUser(t *testing.T) {
     user.PrivateKey = string(privateKeyByte)
     user.PublicKey = string(publicKeyByte)
     user.CreateAt = time.Now().UTC()
-    user.Status = "active"
+    user.Status = entities.UserStatusActive
     
     err = userRepo.CreateUser(context.Background(), user)
 

@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+const (
+    MediaStatusActive = "active"
+    MediaStatusDisabled = "disabled"
+    MediaStatusDelete = "delete"
+)
+
 type MediaEntity struct {
     ID                  string                              `db:"id"`
     Url                 string                              `db:"url"`
