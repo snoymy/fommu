@@ -1,4 +1,4 @@
-package repoimpl
+package repoimpls
 
 import (
 	"app/internal/adapter/commands"

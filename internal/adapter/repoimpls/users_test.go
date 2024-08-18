@@ -1,4 +1,4 @@
-package repoimpl_test
+package repoimpls_test
 
 import (
 	"app/config"
