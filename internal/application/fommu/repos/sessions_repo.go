@@ -1,4 +1,4 @@
-package ports
+package repos
 
 import (
 	"app/internal/core/entities"

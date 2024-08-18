@@ -1,14 +1,14 @@
 package usecases
 
 import (
-	"app/internal/application/fommu/ports"
+	"app/internal/application/fommu/repos"
 	"app/internal/application/appstatus"
 	"app/internal/log"
 	"context"
 )
 
 type SignOutUsecase struct {
-    sessionRepo ports.SessionsRepo `injectable:""`
+    sessionRepo repos.SessionsRepo `injectable:""`
 }
 
 func NewSignOutUsecase() *SignOutUsecase{

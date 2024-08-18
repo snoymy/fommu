@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	"app/internal/application/activitypub/ports"
+	"app/internal/application/activitypub/repos"
 	"app/internal/config"
 	"app/internal/application/appstatus"
 	"app/internal/core/entities"
@@ -11,7 +11,7 @@ import (
 )
 
 type FindResourceUsecase struct {
-    userRepo ports.UsersRepo `injectable:""`
+    userRepo repos.UsersRepo `injectable:""`
 }
 
 func NewFindResourceUsecase() *FindResourceUsecase {

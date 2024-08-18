@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	"app/internal/application/fommu/ports"
+	"app/internal/application/fommu/repos"
 	"app/internal/application/appstatus"
 	"app/internal/core/entities"
 	"app/internal/log"
@@ -11,7 +11,7 @@ import (
 
 
 type AuthUsecase struct {
-    sessionRepo ports.SessionsRepo `injectable:""`
+    sessionRepo repos.SessionsRepo `injectable:""`
 }
 
 func NewAuthUsecase() *AuthUsecase {

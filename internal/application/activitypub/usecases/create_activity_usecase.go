@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	"app/internal/application/activitypub/ports"
+	"app/internal/application/activitypub/repos"
 	"app/internal/application/appstatus"
 	"app/internal/core/entities"
 	"app/internal/log"
@@ -15,7 +15,7 @@ import (
 )
 
 type CreateActivityUsecase struct {
-    activitiesRepo ports.ActivitiesRepo `injectable:""`
+    activitiesRepo repos.ActivitiesRepo `injectable:""`
 }
 
 func NewCreateActivityUsecase() *CreateActivityUsecase {

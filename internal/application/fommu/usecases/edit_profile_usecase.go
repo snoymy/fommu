@@ -2,7 +2,7 @@ package usecases
 
 import (
 	"app/internal/application/fommu/dto"
-	"app/internal/application/fommu/ports"
+	"app/internal/application/fommu/repos"
 	"app/internal/application/fommu/validator"
 	"app/internal/config"
 	"app/internal/application/appstatus"
@@ -13,7 +13,7 @@ import (
 )
 
 type EditProfileUsecase struct {
-    userRepo ports.UsersRepo `injectable:""`
+    userRepo repos.UsersRepo `injectable:""`
 }
 
 func NewEditProfileUsecase() *EditProfileUsecase {

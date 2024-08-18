@@ -7,7 +7,7 @@ import (
 	"app/internal/adapter/commands"
 	"app/internal/adapter/queries"
 	"app/internal/adapter/repoimpl"
-	"app/internal/application/activitypub/ports"
+	"app/internal/application/activitypub/repos"
 	"app/internal/application/activitypub/usecases"
 	"app/internal/infrastructure/httpclient"
 	"app/internal/infrastructure/router"
@@ -38,9 +38,9 @@ func InitRoute(r chi.Router, db *sqlx.DB, apClient httpclient.ActivitypubClient)
     container.Register(commands.NewCommand)
 
     // repo and adapter
-    container.Register(func() ports.UsersRepo { return repoimpl.NewUserRepoImpl() })
-    container.Register(func() ports.FollowRepo { return repoimpl.NewFollowRepoImpl() })
-    container.Register(func() ports.ActivitiesRepo { return repoimpl.NewActActivitiesRepoImpl() })
+    container.Register(func() repos.UsersRepo { return repoimpl.NewUserRepoImpl() })
+    container.Register(func() repos.FollowRepo { return repoimpl.NewFollowRepoImpl() })
+    container.Register(func() repos.ActivitiesRepo { return repoimpl.NewActActivitiesRepoImpl() })
 
     // usecase
     container.Register(usecases.NewVerifySignatureUsecase)

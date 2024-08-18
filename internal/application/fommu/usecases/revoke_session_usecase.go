@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	"app/internal/application/fommu/ports"
+	"app/internal/application/fommu/repos"
 	"app/internal/application/appstatus"
 	"app/internal/core/entities"
 	"app/internal/log"
@@ -9,7 +9,7 @@ import (
 )
 
 type RevokeSessionUsecase struct {
-    sessionRepo ports.SessionsRepo `injectable:""`
+    sessionRepo repos.SessionsRepo `injectable:""`
 }
 
 func NewRevokeSessionUsecase() *RevokeSessionUsecase {

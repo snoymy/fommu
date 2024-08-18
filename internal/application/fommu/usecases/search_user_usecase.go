@@ -2,7 +2,7 @@ package usecases
 
 import (
 	"app/internal/core/entities"
-	"app/internal/application/fommu/ports"
+	"app/internal/application/fommu/repos"
 	"app/internal/application/appstatus"
 	"app/internal/log"
 	"context"
@@ -10,7 +10,7 @@ import (
 )
 
 type SearchUserUsecase struct {
-    userRepo ports.UsersRepo `injectable:""`
+    userRepo repos.UsersRepo `injectable:""`
 }
 
 func NewSearchUserUsecase() *SearchUserUsecase {
