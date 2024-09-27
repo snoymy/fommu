@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"app/internal/adapter/model/activitypub_extended"
 	"bytes"
 	"context"
 	"crypto"
@@ -28,7 +29,7 @@ func NewActivitypubClientImpl() ActivitypubClient {
     return &ActivitypubClientImpl{}
 }
 
-func (c *ActivitypubClientImpl) FetchWebfinger(ctx context.Context, domain string, username string) ([]interface{}, error) {
+func (c *ActivitypubClientImpl) FetchWebfinger(ctx context.Context, username string, domain string) ([]interface{}, error) {
     urls := []string{
         fmt.Sprintf("https://%s/.well-known/webfinger?resource=acct:%s@%s", domain, username, domain),
         fmt.Sprintf("https://www.%s/.well-known/webfinger?resource=acct:%s@%s", domain, username, domain),
@@ -105,7 +106,7 @@ func (c *ActivitypubClientImpl) FetchActor(ctx context.Context, url string) (*ac
 
     var nestedScheme struct {
         Tag []*activitypub.Object `json:"tag"`
-        Attachment []*activitypub.Object `json:"attachment"`
+        Attachment []*activitypub_extended.PropertyValue `json:"attachment"`
     }
 
     err = json.Unmarshal(body, &nestedScheme)

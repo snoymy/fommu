@@ -8,7 +8,7 @@ import (
 
 type ActivitypubClient interface {
 	// FetchWebfinger retrieves the Webfinger response for the given URLs.
-	FetchWebfinger(ctx context.Context, domain string, username string) ([]interface{}, error)
+	FetchWebfinger(ctx context.Context, username string, domain string) ([]interface{}, error)
 	
 	// // FetchActivitypubObject retrieves a general ActivityPub object from the specified URL.
     FetchActor(ctx context.Context, url string) (*activitypub.Actor, error)

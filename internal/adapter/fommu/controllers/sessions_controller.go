@@ -232,6 +232,7 @@ func (c *SessionsController) VerifySession(w http.ResponseWriter, r *http.Reques
         "domain": user.Domain,
         "preference": user.Preference.ValueOrZero(),
         "tag": user.Tag.ValueOrZero(),
+        "attachment": user.Attachment.ValueOrZero(),
         "follower_count": user.FollowerCount,
         "following_count": user.FollowingCount,
         "create_at": user.CreateAt.UTC(),

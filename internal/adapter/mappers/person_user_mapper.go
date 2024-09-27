@@ -1,12 +1,14 @@
 package mappers
 
 import (
+	"app/internal/adapter/model/activitypub_extended"
 	"app/internal/core/entities"
 	"app/internal/core/types"
 	"app/internal/utils/mimeutil"
 	"app/internal/utils/stringutil"
 	"app/internal/utils/structutil"
 	"errors"
+	"html"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -84,7 +86,7 @@ func UserToPerson(user *entities.UserEntity) (*activitypub.Person, error) {
 
     person := activitypub.PersonNew(activitypub.IRI(user.ActorId))
 
-    person.Name = activitypub.NaturalLanguageValuesNew(activitypub.LangRefValueNew(activitypub.DefaultLang, user.Displayname))
+    person.Name = activitypub.NaturalLanguageValuesNew(activitypub.LangRefValueNew(activitypub.DefaultLang, html.UnescapeString(user.Displayname)))
     person.PreferredUsername = activitypub.NaturalLanguageValuesNew(activitypub.LangRefValueNew(activitypub.DefaultLang, user.Username))
     person.Inbox = activitypub.IRI(user.InboxURL)
     person.Outbox = activitypub.IRI(user.OutboxURL)
@@ -97,7 +99,7 @@ func UserToPerson(user *entities.UserEntity) (*activitypub.Person, error) {
     }
     person.Summary = activitypub.NaturalLanguageValuesNew(activitypub.LangRefValueNew(
         activitypub.DefaultLang, 
-        strings.ReplaceAll(strings.ReplaceAll(stringutil.Linkify(user.Bio.ValueOrZero()), "\n", "<br>"), " ", "&nbsp;"),
+        stringutil.Linkify(strings.ReplaceAll(strings.ReplaceAll(user.Bio.ValueOrZero(), "\n", "<br>"), " ", "&nbsp;")),
     ))
     person.URL = activitypub.IRI(user.URL)
     person.Icon = activitypub.Image{
@@ -112,7 +114,19 @@ func UserToPerson(user *entities.UserEntity) (*activitypub.Person, error) {
     }
     person.Attachment = activitypub.ItemCollection{}
     for _, item := range user.Attachment.ValueOrZero() {
-        attachment, err := structutil.MapToStruct[activitypub.Object](item.(map[string]interface{}))
+        attachment, err := structutil.MapToStruct[activitypub_extended.PropertyValue](item.(map[string]interface{}))
+        attachment.Name = activitypub.NaturalLanguageValuesNew(
+            activitypub.LangRefValueNew(
+                activitypub.DefaultLang, 
+                stringutil.Linkify(strings.ReplaceAll(strings.ReplaceAll(attachment.Name.String(), "\n", "<br>"), " ", "&nbsp;")),
+            ),
+        )
+        attachment.Value = activitypub.NaturalLanguageValuesNew(
+            activitypub.LangRefValueNew(
+                activitypub.DefaultLang, 
+                stringutil.Linkify(strings.ReplaceAll(strings.ReplaceAll(attachment.Value.String(), "\n", "<br>"), " ", "&nbsp;")),
+            ),
+        )
         if err != nil {
             return nil, err
         }
@@ -133,16 +147,23 @@ func UserToPerson(user *entities.UserEntity) (*activitypub.Person, error) {
 func parseAttachment(person *activitypub.Person) (types.JsonArray, error) {
     var err error
     attachments := types.JsonArray{}
-    if person.Tag != nil {
+    if person.Attachment != nil {
         for _, item := range person.Attachment {
             var attachment interface{}
-            if item.IsObject() {
+            if item.GetType() == activitypub_extended.PropertyValueType {
+                attachment, err = structutil.StructToMap(item.(*activitypub_extended.PropertyValue))
+                if err != nil {
+                    return nil, err
+                }
+            } else if item.IsObject() {
                 attachment, err = structutil.StructToMap(item.(*activitypub.Object))
                 if err != nil {
                     return nil, err
                 }
             } else if item.IsLink() {
                 attachment = item.(*activitypub.Link).GetLink().String()
+            } else {
+                return nil, nil
             }
             attachments = append(attachments, attachment)
         }

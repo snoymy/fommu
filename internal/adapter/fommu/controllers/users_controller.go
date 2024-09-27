@@ -58,17 +58,17 @@ func (c *UsersController) LookUp(w http.ResponseWriter, r *http.Request) error {
     defer log.ExitMethod(ctx)
 
     acct := r.URL.Query().Get("acct")
-    log.Info(ctx, "Spliting username and domain.")
-    s := strings.SplitN(acct, "@", 2)
+    // log.Info(ctx, "Spliting username and domain.")
+    // s := strings.SplitN(acct, "@", 2)
 
-    username := strings.TrimSpace(s[0])
-    domain := ""
-    if len(s) > 1 {
-        log.Debug(ctx, "Has domain name.")
-        domain = strings.TrimSpace(s[1])
-    }
+    // username := strings.TrimSpace(s[0])
+    // domain := ""
+    // if len(s) > 1 {
+    //     log.Debug(ctx, "Has domain name.")
+    //     domain = strings.TrimSpace(s[1])
+    // }
     
-    user, err := c.getUser.Exec(ctx, username, domain)
+    user, err := c.getUser.Exec(ctx, acct, "")
 
     if err != nil {
         log.Info(ctx, "Response with error: " + err.Error())
@@ -165,6 +165,7 @@ func (c *UsersController) GetUser(w http.ResponseWriter, r *http.Request) error 
         log.Debug(ctx, "Has domain name.")
         domain = strings.TrimSpace(s[1])
     }
+    log.Debug(ctx, domain)
 
     user, err := c.getUser.Exec(ctx, username, domain)
 
@@ -191,6 +192,7 @@ func (c *UsersController) GetUser(w http.ResponseWriter, r *http.Request) error 
         "domain": user.Domain,
         "preference": user.Preference.ValueOrZero(),
         "tag": user.Tag.ValueOrZero(),
+        "attachment": user.Attachment.ValueOrZero(),
         "follower_count": user.FollowerCount,
         "following_count": user.FollowingCount,
         "create_at": user.CreateAt.UTC(),
@@ -258,6 +260,20 @@ func (c *UsersController) EditAccount(w http.ResponseWriter, r *http.Request) er
         } else if v, ok := i.(string); ok {
             value := types.NewNullable(v)
             account.NewPassword = &value
+        } else {
+            err := appstatus.BadValue("Invalid value")
+            log.Info(ctx, "Response with error: " + err.Error())
+            return err
+        }
+    }
+
+    if i, ok := body["discoverable"]; ok {
+        if i == nil {
+            value := types.Null[bool]()
+            account.Discoverable = &value
+        } else if v, ok := i.(bool); ok {
+            value := types.NewNullable(v)
+            account.Discoverable = &value
         } else {
             err := appstatus.BadValue("Invalid value")
             log.Info(ctx, "Response with error: " + err.Error())
@@ -351,6 +367,20 @@ func (c *UsersController) EditProfile(w http.ResponseWriter, r *http.Request) er
         } else if v, ok := i.(map[string]interface{}); ok {
             value := types.NewNullable(types.JsonObject(v))
             profile.Preference = &value
+        } else {
+            err := appstatus.BadValue("Invalid value")
+            log.Info(ctx, "Response with error: " + err.Error())
+            return err
+        }
+    }
+
+    if i, ok := body["attachment"]; ok {
+        if i == nil {
+            value := types.Null[types.JsonArray]()
+            profile.Attachment = &value
+        } else if v, ok := i.([]interface{}); ok {
+            value := types.NewNullable(types.JsonArray(v))
+            profile.Attachment = &value
         } else {
             err := appstatus.BadValue("Invalid value")
             log.Info(ctx, "Response with error: " + err.Error())

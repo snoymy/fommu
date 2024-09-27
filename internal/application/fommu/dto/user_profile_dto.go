@@ -19,4 +19,5 @@ type UserProfileDTO struct {
     Avatar              *types.Nullable[string]
     Banner              *types.Nullable[string]
     Preference          *types.Nullable[types.JsonObject]
+    Attachment          *types.Nullable[types.JsonArray]
 }

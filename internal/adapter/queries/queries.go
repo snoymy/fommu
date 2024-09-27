@@ -1,9 +1,10 @@
 package queries
 
 import (
-	"app/internal/infrastructure/httpclient"
 	"app/internal/core/entities"
+	"app/internal/infrastructure/httpclient"
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -37,7 +38,7 @@ func (q *Query) SearchUser(ctx context.Context, textSearch string, domain string
     var users []*entities.UserEntity = nil
     textSearch = strings.ReplaceAll(textSearch, "%", "\\%")
     textSearch = strings.ReplaceAll(textSearch, "_", "\\_")
-    err := q.db.Select(&users, "select * from users where (trim($1) <> '' and username ilike $1 || '%') and (trim($2) = '' or domain ilike $2 || '%') or (trim($1) <> '' and display_name ilike $1 || '%') limit 10", textSearch, domain)
+    err := q.db.Select(&users, "select * from users where discoverable = true and ((trim($1) <> '' and username ilike $1 || '%') and (trim($2) = '' or domain ilike $2 || '%') or (trim($1) <> '' and display_name ilike $1 || '%')) limit 10", textSearch, domain)
     if err != nil {
         return nil, err
     }
@@ -108,7 +109,7 @@ func (q *Query) FindUserByEmail(ctx context.Context, email string, domain string
 
 func (q *Query) FindUserByResourceName(ctx context.Context, resource string, domain string) (*entities.UserEntity, error) {
     var users []*entities.UserEntity = nil
-    err := q.db.Select(&users, "select * from users where username||'@'||$1=$2", domain, resource)
+    err := q.db.Select(&users, "select * from users where discoverable = true and username||'@'||$1=$2", domain, resource)
     if err != nil {
         return nil, err
     }
@@ -131,6 +132,7 @@ func (q *Query) FindPersonByUsername(ctx context.Context, username string, domai
         var ok bool
 
         link, ok := l.(map[string]interface{})
+        fmt.Println(link)
         if !ok {
             continue
         }

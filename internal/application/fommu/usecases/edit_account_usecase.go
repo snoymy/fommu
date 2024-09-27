@@ -42,21 +42,33 @@ func (uc *EditAccountUsecase) Exec(ctx context.Context, username string, account
     if account.Email != nil {
         log.Info(ctx, "Update email")
         email := account.Email.ValueOrZero()
-        currentPassword := account.CurrentPassword.ValueOrZero()
-        if err := uc.updateEmail(user, currentPassword, email); err != nil {
+        if err := uc.updateEmail(user, email); err != nil {
             return err
         }
+        hasUpdate = true
     }
 
     if account.NewPassword != nil {
         log.Info(ctx, "Update password")
-        currentPassword := account.CurrentPassword.ValueOrZero()
-        if err := uc.updatePassword(user, currentPassword, account.NewPassword.ValueOrZero()); err != nil {
+        if err := uc.updatePassword(user, account.NewPassword.ValueOrZero()); err != nil {
             return err
         }
+        hasUpdate = true
+    }
+
+    if account.Discoverable != nil {
+        log.Info(ctx, "Update discoverable")
+        if err := uc.updateDiscoverable(user, account.Discoverable.ValueOrZero()); err != nil {
+            return err
+        }
+        hasUpdate = true
     }
 
     if hasUpdate {
+        currentPassword := account.CurrentPassword.ValueOrZero()
+        if err := uc.checkPassword(ctx, user, currentPassword); err != nil {
+            return err
+        }
         user.UpdateAt.Set(time.Now().UTC())
         if err := uc.userRepo.UpdateUser(ctx, user); err != nil {
             log.Error(ctx, "Error: " + err.Error())
@@ -81,13 +93,17 @@ func (uc *EditAccountUsecase) getUser(ctx context.Context, username string) (*en
     return user, nil
 }
 
-func (uc *EditAccountUsecase) updateEmail(user *entities.UserEntity, password string, email string) error {
-    if user == nil {
-        return errors.New("user entity is nil")
-    }
-
+func (uc *EditAccountUsecase) checkPassword(ctx context.Context, user *entities.UserEntity, password string) error {
     if passwordutil.HashPassword(password) != user.PasswordHash.ValueOrZero() {
         return appstatus.InvalidCredential("Wrong password")
+    }
+
+    return nil
+}
+
+func (uc *EditAccountUsecase) updateEmail(user *entities.UserEntity, email string) error {
+    if user == nil {
+        return errors.New("user entity is nil")
     }
 
     if email == user.Email.ValueOrZero() {
@@ -99,18 +115,13 @@ func (uc *EditAccountUsecase) updateEmail(user *entities.UserEntity, password st
     }
 
     user.Email.Set(email)
-    user.UpdateAt.Set(time.Now().UTC())
 
     return nil
 }
 
-func (uc *EditAccountUsecase) updatePassword(user *entities.UserEntity, password string, newPassword string) error {
+func (uc *EditAccountUsecase) updatePassword(user *entities.UserEntity, newPassword string) error {
     if user == nil {
         return errors.New("user entity is nil")
-    }
-
-    if passwordutil.HashPassword(password) != user.PasswordHash.ValueOrZero() {
-        return appstatus.InvalidCredential("Wrong password")
     }
 
     newPasswordHash := passwordutil.HashPassword(newPassword)
@@ -123,7 +134,16 @@ func (uc *EditAccountUsecase) updatePassword(user *entities.UserEntity, password
     }
 
     user.PasswordHash.Set(newPasswordHash)
-    user.UpdateAt.Set(time.Now().UTC())
+
+    return nil
+}
+
+func (uc *EditAccountUsecase) updateDiscoverable(user *entities.UserEntity, discoverable bool) error {
+    if user == nil {
+        return errors.New("user entity is nil")
+    }
+
+    user.Discoverable = discoverable
 
     return nil
 }

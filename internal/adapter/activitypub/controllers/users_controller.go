@@ -48,6 +48,12 @@ func (f *APUsersController) GetUser(w http.ResponseWriter, r *http.Request) erro
         return err
     }
 
+    if user == nil {
+        err := appstatus.NotFound("User not found.")
+        log.Info(ctx, "Response with error: " + err.Error())
+        return err
+    }
+
     person, err := mappers.UserToPerson(user)
     if err != nil {
         log.Error(ctx, "Error: " + err.Error())

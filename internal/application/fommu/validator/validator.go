@@ -39,7 +39,7 @@ func ValidateUsername(username string) error {
         return errors.New("Username must start with letter or underscore.")
     }
 
-    onlyAllowCharacter, err := regexp.Match(`[A-Za-z0-9_\/]`, []byte(username))
+    onlyAllowCharacter, err := regexp.Match(`^[A-Za-z0-9_]*$`, []byte(username))
     if err != nil {
         return err
     }

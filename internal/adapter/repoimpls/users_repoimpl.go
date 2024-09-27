@@ -152,6 +152,9 @@ func (r *UserRepoImpl) FindUserByUsername(ctx context.Context, username string, 
     }
 
     user, err = mappers.PersonToUser(person)
+    if err != nil {
+        return nil, err
+    }
     user.ID = uuid.New().String()
     user.Remote = true
     user.Remote = true

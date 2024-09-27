@@ -71,6 +71,15 @@ func (uc *EditProfileUsecase) Exec(ctx context.Context, username string, profile
         hasUpdate = true
     }
 
+    if profile.Attachment != nil {
+        for i := range len(profile.Attachment.ValueOrZero()) {
+            profile.Attachment.ValueOrZero()[i].(map[string]interface{})["name"] = html.EscapeString(profile.Attachment.ValueOrZero()[i].(map[string]interface{})["name"].(string))
+            profile.Attachment.ValueOrZero()[i].(map[string]interface{})["value"] = html.EscapeString(profile.Attachment.ValueOrZero()[i].(map[string]interface{})["value"].(string))
+        }
+        user.Attachment = *profile.Attachment
+        hasUpdate = true
+    }
+
     // if !profile.Gender.IsNull() {
     //     user.Gender = profile.Gender
     //     profileUpdate = true
